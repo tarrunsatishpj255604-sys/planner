@@ -23,10 +23,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: 'Orbitron', sans-serif;
   font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--primary-600);
+  font-size: 1.25rem;
+  color: var(--text);
 }
 .brand-mark {
   width: 38px;
@@ -36,7 +35,6 @@
   display: grid;
   place-items: center;
   color: #fff;
-  font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);

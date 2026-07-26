@@ -40,7 +40,15 @@
 }
 .feature p {
   color: var(--text-soft);
-  font-size: 0.98rem;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+}
+.feature .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.feature .tags span {
+  font-size: 0.72rem; font-weight: 600; padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-soft); border: 1px solid var(--border);
+  color: var(--text-soft);
 }
 @media (max-width: 960px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }

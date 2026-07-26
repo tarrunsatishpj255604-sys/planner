@@ -3,36 +3,36 @@ import './Showcase.css'
 
 const panels = [
   {
-    tab: 'Timetable',
-    title: 'A timetable that adapts to you',
-    text: 'Two-week rotating timetables with custom lesson times, rooms and teachers.',
-    points: ['Auto week-switching', 'Saturday & Sunday support', 'Per-lesson notes & rooms'],
+    tab: 'Subjects',
+    title: 'Every subject, beautifully organised',
+    text: 'Track progress, grades, teachers and exam countdowns for each subject.',
+    points: ['Custom icon and colour', 'Current grade and progress %', 'Exam countdown', 'Notes and resources'],
     rows: [
-      { c: '#4caf50', t: 'Maths', s: 'Room 214 · Mr Lee', r: '09:00' },
-      { c: '#2bbd7e', t: 'Physics', s: 'Lab 3 · Ms Patel', r: '10:00' },
-      { c: '#fb8c00', t: 'Biology', s: 'Room 8 · Dr Khan', r: '11:00' },
+      { c: '#4caf50', t: 'Mathematics', s: 'Mr Lee · Room 214', r: '78%' },
+      { c: '#2bbd7e', t: 'Physics', s: 'Ms Patel · Lab 3', r: '85%' },
+      { c: '#fb8c00', t: 'Biology', s: 'Dr Khan · Room 8', r: 'Exam in 3d' },
     ],
   },
   {
     tab: 'Tasks',
-    title: 'Never miss a deadline',
-    text: 'Current, overdue and completed tasks — all sorted and colour-coded by subject.',
-    points: ['Overdue warnings', 'Subject colour-coding', 'Quick complete checkbox'],
+    title: 'Never miss a deadline again',
+    text: 'Homework, assignments and projects — sorted by priority and due date.',
+    points: ['Priority levels 1–5', 'Recurring tasks', 'Tags and attachments', 'Progress status'],
     rows: [
-      { c: '#2bbd7e', t: 'Physics homework', s: 'Due tomorrow', r: '16:30' },
-      { c: '#e53935', t: 'History essay', s: 'Overdue · 2 days', r: '!' },
-      { c: '#4caf50', t: 'Maths worksheet', s: 'Due Fri', r: 'Fri' },
+      { c: '#2bbd7e', t: 'Physics lab report', s: 'Due tomorrow · P3', r: 'Tomorrow' },
+      { c: '#e53935', t: 'History essay', s: 'Overdue · P5', r: '2 days late' },
+      { c: '#4caf50', t: 'Maths worksheet', s: 'Due Friday · P2', r: 'Fri' },
     ],
   },
   {
-    tab: 'Assessments',
-    title: 'Exams and tests, organised',
-    text: 'See upcoming exams and tests grouped by Today, This Week, Next Week and beyond.',
-    points: ['Priority levels 1–5', 'Seat & location tracking', 'Smart date grouping'],
+    tab: 'Analytics',
+    title: 'See your progress at a glance',
+    text: 'Beautiful charts show study hours, productivity and subject performance.',
+    points: ['Weekly and monthly comparison', 'Focus score tracking', 'Subject performance', 'Streak history'],
     rows: [
-      { c: '#e53935', t: 'Biology Exam', s: 'Hall A · Seat 14', r: '3 days' },
-      { c: '#fb8c00', t: 'Maths Test', s: 'In class', r: '1 week' },
-      { c: '#4caf50', t: 'Physics Quiz', s: 'Lab 3', r: '2 weeks' },
+      { c: '#4caf50', t: 'Study hours', s: 'This week', r: '18.5h' },
+      { c: '#2bbd7e', t: 'Tasks completed', s: 'This week', r: '23 / 28' },
+      { c: '#fb8c00', t: 'Focus score', s: 'Average', r: '87%' },
     ],
   },
 ]
@@ -44,9 +44,9 @@ export default function Showcase() {
     <section className="section" id="showcase">
       <div className="container">
         <span className="eyebrow">Take a closer look</span>
-        <h2 className="section-title">Beautiful, fast, and intuitive</h2>
+        <h2 className="section-title">Designed to keep you on track</h2>
         <p className="section-sub">
-          Every screen is designed to give you the information you need at a glance.
+          Every screen is crafted to give you the information you need at a glance.
         </p>
 
         <div className="showcase-tabs" role="tablist">

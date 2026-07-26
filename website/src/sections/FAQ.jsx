@@ -3,24 +3,28 @@ import './FAQ.css'
 
 const faqs = [
   {
-    q: 'Is Cheon free to use?',
-    a: 'Yes! Cheon Smart Planner is free to download on both the App Store and Google Play, with no subscription required for the core planning features.',
+    q: 'Is Study Planner free to use?',
+    a: 'Yes! Study Planner is free forever with no credit card required. All core planning features — subjects, tasks, calendar, notes, goals, timer and analytics — are included at no cost.',
   },
   {
-    q: 'Which platforms does Cheon support?',
-    a: 'Cheon is available on iOS and Android. The app is built with Flutter, so it runs natively on both platforms with a consistent experience.',
+    q: 'Which platforms is it available on?',
+    a: 'Study Planner works on the web, iOS and Android. Your data syncs seamlessly across all your devices so you can pick up where you left off.',
   },
   {
-    q: 'How does Smart Revision work?',
-    a: 'Smart Revision combines your study window, session length and break preferences with your prioritised exams and tests to generate tailored study blocks. It automatically re-plans when you add or change assessments.',
+    q: 'Can I customise the dashboard?',
+    a: 'Absolutely. You can drag, resize and rearrange any of the 13 available widgets. You can also hide widgets you don\'t need and choose where your sidebar sits.',
   },
   {
-    q: 'Can I sync my phone calendar?',
-    a: 'Yes. Cheon can import events from your device calendars so they appear alongside your lessons and tasks in the timeline view.',
+    q: 'How many themes are available?',
+    a: 'There are 11 built-in themes ranging from Midnight and Emerald to Cyberpunk and Aurora. You can also fine-tune accent colours, fonts, card radius, glassmorphism and density.',
   },
   {
-    q: 'Is my data private?',
-    a: 'Your timetable, tasks and study data are stored locally on your device. Calendar access is only used to display events you choose to import.',
+    q: 'Does it support Pomodoro studying?',
+    a: 'Yes. The built-in Pomodoro timer supports custom lengths, automatic breaks, focus mode, ambient sounds and session history with statistics.',
+  },
+  {
+    q: 'Is my data private and secure?',
+    a: 'Your data is stored securely and only accessible to you. Calendar sync is opt-in, and we never sell your data to third parties.',
   },
 ]
 

@@ -4,9 +4,10 @@ import './App.css'
 import Nav from './components/Nav.jsx'
 import Hero from './sections/Hero.jsx'
 import Features from './sections/Features.jsx'
-import SmartRevision from './sections/SmartRevision.jsx'
+import Themes from './sections/Themes.jsx'
+import Customisation from './sections/Customisation.jsx'
+import Widgets from './sections/Widgets.jsx'
 import Showcase from './sections/Showcase.jsx'
-import Timeline from './sections/Timeline.jsx'
 import CTA from './sections/CTA.jsx'
 import FAQ from './sections/FAQ.jsx'
 import Footer from './sections/Footer.jsx'
@@ -26,9 +27,10 @@ export default function App() {
       <main>
         <Hero />
         <Features />
-        <SmartRevision />
+        <Themes />
+        <Customisation />
+        <Widgets />
         <Showcase />
-        <Timeline />
         <CTA />
         <FAQ />
       </main>
