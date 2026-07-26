@@ -1,0 +1,99 @@
+.revision {
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.revision-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  margin-top: 48px;
+}
+.revision-visual {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--primary-700), var(--secondary-600));
+  padding: 40px;
+  color: #fff;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+.revision-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(80% 60% at 80% 10%, rgba(255,255,255,0.18), transparent 60%);
+}
+.rev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.15);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.rev-pill .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.rev-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  position: relative;
+}
+.rev-list { list-style: none; display: flex; flex-direction: column; gap: 14px; position: relative; }
+.rev-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  font-size: 0.95rem;
+}
+.rev-list .check {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: grid; place-items: center;
+}
+.rev-list li.done .check { background: #fff; color: var(--primary-700); }
+.rev-list li.done span.txt { text-decoration: line-through; opacity: 0.7; }
+
+.revision-points { display: flex; flex-direction: column; gap: 28px; }
+.revision-point { display: flex; gap: 18px; align-items: flex-start; }
+.revision-point .num {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  background: var(--primary-50);
+  color: var(--primary-600);
+  border: 1px solid var(--primary-100);
+}
+@media (prefers-color-scheme: dark) {
+  .revision-point .num {
+    background: rgba(76, 175, 80, 0.12);
+    color: var(--primary-300);
+    border-color: rgba(76, 175, 80, 0.25);
+  }
+}
+.revision-point h3 { font-size: 1.15rem; margin-bottom: 6px; }
+.revision-point p { color: var(--text-soft); font-size: 0.98rem; }
+
+@media (max-width: 860px) {
+  .revision-grid { grid-template-columns: 1fr; gap: 40px; }
+}
