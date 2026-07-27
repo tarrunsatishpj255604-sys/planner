@@ -19,9 +19,6 @@ export default function Hero() {
             <a className="btn btn-ghost" href="#features">Explore features</a>
           </div>
           <div className="hero-meta">
-            <span className="stars">★★★★★</span>
-            <span>Loved by 50,000+ students</span>
-            <span className="dot" />
             <span>Free forever</span>
           </div>
         </div>

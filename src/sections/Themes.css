@@ -51,7 +51,6 @@
 .theme-meta h4 { font-size: 0.95rem; margin-bottom: 2px; }
 .theme-meta p { font-size: 0.78rem; color: var(--text-soft); }
 
-/* Theme gradients */
 .t-midnight { background: linear-gradient(135deg, #0a1628, #1e3a5f); }
 .t-galaxy { background: linear-gradient(135deg, #2d1b4e, #6b2d8c, #b829e0); }
 .t-emerald { background: linear-gradient(135deg, #064e3b, #10b981); }

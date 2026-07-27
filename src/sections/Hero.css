@@ -46,7 +46,6 @@
 .hero-meta .stars { color: var(--accent-600); letter-spacing: 2px; }
 .hero-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--neutral-400); }
 
-/* Dashboard mock */
 .hero-visual { display: flex; justify-content: center; position: relative; }
 .dash {
   width: 100%;

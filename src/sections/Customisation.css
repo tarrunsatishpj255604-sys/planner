@@ -27,7 +27,6 @@
 .cust-item .label { font-weight: 600; font-size: 0.98rem; }
 .cust-item .desc { font-size: 0.82rem; color: var(--text-soft); }
 
-/* Settings panel mock */
 .settings-mock {
   border-radius: var(--radius-lg);
   background: var(--surface);

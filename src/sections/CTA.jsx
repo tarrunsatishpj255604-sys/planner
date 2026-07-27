@@ -8,8 +8,8 @@ export default function CTA() {
           <span className="eyebrow">Get started free</span>
           <h2>Start planning your best year yet</h2>
           <p>
-            Join over 50,000 students who organise their academic life with
-            Study Planner. Free forever — no credit card required.
+            Organise your academic life with Study Planner. Free forever — no
+            credit card required.
           </p>
           <div className="cta-actions">
             <a className="btn btn-primary" href="#download">Create free account</a>

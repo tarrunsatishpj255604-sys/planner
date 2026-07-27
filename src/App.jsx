@@ -9,7 +9,6 @@ import Customisation from './sections/Customisation.jsx'
 import Widgets from './sections/Widgets.jsx'
 import Showcase from './sections/Showcase.jsx'
 import CTA from './sections/CTA.jsx'
-import FAQ from './sections/FAQ.jsx'
 import Footer from './sections/Footer.jsx'
 
 export default function App() {
@@ -32,7 +31,6 @@ export default function App() {
         <Widgets />
         <Showcase />
         <CTA />
-        <FAQ />
       </main>
       <Footer />
     </>
