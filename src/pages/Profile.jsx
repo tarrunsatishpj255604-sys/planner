@@ -1,69 +1,78 @@
-import { useState, useMemo } from 'react'
-import { useApp } from '../lib/AppContext.jsx'
-import { levelFromXp, getStreak, AVATAR_OPTIONS, ACHIEVEMENT_DEFS } from '../lib/helpers.js'
-import './ProfilePage.css'
+import { useState } from 'react';
+import { useApp } from '../lib/AppContext.jsx';
+import { levelFromXp, getStreak, AVATAR_OPTIONS, ACHIEVEMENT_DEFS } from '../lib/helpers.js';
+import './ProfilePage.css';
 
 export default function Profile() {
-  const { profile, tasks, sessions, achievements, updateProfile, loading } = useApp()
-  const [editing, setEditing] = useState(false)
-  const [username, setUsername] = useState('')
-  const [avatar, setAvatar] = useState('')
-  const [dailyGoal, setDailyGoal] = useState(120)
+  const { profile, subjects, tasks, sessions, achievements, updateProfile } = useApp();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ username: profile?.username || '', avatar: profile?.avatar || AVATAR_OPTIONS[0], daily_goal_minutes: profile?.daily_goal_minutes || 120 });
 
-  const xpInfo = useMemo(() => levelFromXp(profile?.xp || 0), [profile])
-  const streak = useMemo(() => getStreak(sessions), [sessions])
-  const totalMins = useMemo(() => (sessions || []).reduce((sum, s) => sum + (s.duration_minutes || 0), 0), [sessions])
-  const completedTasks = useMemo(() => (tasks || []).filter(t => t.completed).length, [tasks])
+  const level = levelFromXp(profile?.xp || 0);
+  const streak = getStreak(profile);
+  const totalTime = (sessions || []).reduce((s, x) => s + (x.duration || 0), 0);
+  const tasksDone = (tasks || []).filter(t => t.completed).length;
 
-  const unlockedKeys = useMemo(() => new Set((achievements || []).map(a => a.key)), [achievements])
-  const recentAchievements = useMemo(() => ACHIEVEMENT_DEFS.filter(d => unlockedKeys.has(d.key)).slice(-6), [unlockedKeys])
+  const unlocked = achievements || [];
+  const recent = ACHIEVEMENT_DEFS.filter(a => unlocked.includes(a.id)).slice(-5).reverse();
 
-  const startEdit = () => { setUsername(profile?.username || ''); setAvatar(profile?.avatar_emoji || AVATAR_OPTIONS[0]); setDailyGoal(profile?.daily_goal_minutes || 120); setEditing(true) }
-  const save = () => { updateProfile({ username, avatar_emoji: avatar, daily_goal_minutes: dailyGoal }); setEditing(false) }
-
-  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
+  const save = async () => {
+    await updateProfile({ username: form.username, avatar: form.avatar, daily_goal_minutes: Number(form.daily_goal_minutes) });
+    setEditing(false);
+  };
 
   return (
     <div className="profile-page">
-      <div className="profile-banner" style={{ background: `linear-gradient(135deg, var(--primary), var(--accent))` }}>
-        <div className="profile-banner-info">
-          <span className="profile-avatar" style={{ background: 'rgba(255,255,255,0.25)' }}>{profile?.avatar_emoji || '🦊'}</span>
-          <div><h1 style={{ color: '#fff' }}>{profile?.username || 'Student'}</h1><span className="profile-level-badge" style={{ background: 'rgba(255,255,255,0.25)', color: '#fff' }}>Level {xpInfo.level}</span></div>
+      <div className="profile-banner">
+        <div className="profile-avatar">{profile?.avatar || '😀'}</div>
+        <div className="profile-info">
+          <h1>{profile?.username || 'Learner'}</h1>
+          <span className="level-badge">Level {level.level}</span>
         </div>
-        <button className="btn btn-ghost btn-sm profile-edit-btn" style={{ color: '#fff', background: 'rgba(255,255,255,0.2)' }} onClick={startEdit}>✏️ Edit</button>
+        <button className="btn btn-outline" onClick={() => setEditing(e => !e)}>{editing ? 'Close' : '✏️ Edit'}</button>
       </div>
 
       {editing && (
-        <div className="form-card">
-          <div className="form-head"><h3>Edit Profile</h3><button className="close-btn" onClick={() => setEditing(false)}>✕</button></div>
-          <div className="form-field"><label>Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} /></div>
-          <div className="form-field"><label>Avatar</label><div className="avatar-picker">{AVATAR_OPTIONS.map(a => <button key={a} className={`avatar-swatch ${avatar === a ? 'selected' : ''}`} onClick={() => setAvatar(a)}>{a}</button>)}</div></div>
-          <div className="form-field"><label>Daily Goal (minutes)</label><input type="number" min="30" max="600" step="15" value={dailyGoal} onChange={e => setDailyGoal(parseInt(e.target.value) || 120)} /></div>
-          <div className="form-actions"><button className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Save Changes</button></div>
+        <div className="card form-card">
+          <div className="form-field"><label>Username</label><input type="text" value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} /></div>
+          <div className="form-field">
+            <label>Avatar</label>
+            <div className="avatar-picker">
+              {AVATAR_OPTIONS.map(a => (
+                <button key={a} className={`avatar-opt ${form.avatar === a ? 'active' : ''}`} onClick={() => setForm(f => ({ ...f, avatar: a }))}>{a}</button>
+              ))}
+            </div>
+          </div>
+          <div className="form-field"><label>Daily Goal (minutes)</label><input type="number" value={form.daily_goal_minutes} onChange={e => setForm(f => ({ ...f, daily_goal_minutes: e.target.value }))} /></div>
+          <div className="form-actions"><button className="btn btn-primary" onClick={save}>Save</button></div>
         </div>
       )}
 
       <div className="card xp-card">
-        <div className="card-head"><h3>Experience Points</h3><span className="level-badge" style={{ background: 'var(--primary)' }}>Lv {xpInfo.level}</span></div>
-        <div className="xp-progress-wrap"><div className="xp-progress-bar"><div className="xp-progress-fill" style={{ width: `${xpInfo.progress * 100}%`, background: 'linear-gradient(90deg, var(--primary), var(--accent))' }} /></div><span className="xp-progress-text">{xpInfo.currentLevelXp} / {xpInfo.nextLevelXp} XP</span></div>
-        <p className="xp-hint">{xpInfo.nextLevelXp - xpInfo.currentLevelXp} XP to level {xpInfo.level + 1}</p>
+        <div className="card-head"><h3>Level {level.level}</h3></div>
+        <div className="xp-bar"><div className="xp-fill" style={{ width: `${level.progress}%` }} /></div>
+        <div className="xp-text">{profile?.xp || 0} XP · {level.xpForNext} to next level</div>
       </div>
 
       <div className="grid-4">
-        <div className="card stat-card"><div className="stat-emoji">🔥</div><div className="stat-info"><span className="stat-value">{streak}</span><span className="stat-label">Day Streak</span></div></div>
-        <div className="card stat-card"><div className="stat-emoji">⏱️</div><div className="stat-info"><span className="stat-value">{Math.floor(totalMins / 60)}h</span><span className="stat-label">Total Study</span></div></div>
-        <div className="card stat-card"><div className="stat-emoji">✅</div><div className="stat-info"><span className="stat-value">{completedTasks}</span><span className="stat-label">Tasks Done</span></div></div>
-        <div className="card stat-card"><div className="stat-emoji">⭐</div><div className="stat-info"><span className="stat-value">{profile?.xp || 0}</span><span className="stat-label">Total XP</span></div></div>
+        <div className="card stat-card"><div className="stat-icon">🔥</div><div className="stat-value">{streak}</div><div className="stat-label">Day Streak</div></div>
+        <div className="card stat-card"><div className="stat-icon">⏱️</div><div className="stat-value">{Math.round(totalTime)}m</div><div className="stat-label">Total Time</div></div>
+        <div className="card stat-card"><div className="stat-icon">✅</div><div className="stat-value">{tasksDone}</div><div className="stat-label">Tasks Done</div></div>
+        <div className="card stat-card"><div className="stat-icon">📚</div><div className="stat-value">{(subjects || []).length}</div><div className="stat-label">Subjects</div></div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>Recent Achievements</h3></div>
-        {recentAchievements.length === 0 ? <div className="dash-empty">No achievements unlocked yet. Keep studying! 🏆</div> : (
-          <div className="profile-achievements">
-            {recentAchievements.map(a => <div key={a.key} className="pa-item"><span className="pa-icon">{a.icon}</span><div><span className="pa-title">{a.title}</span><span className="pa-desc">{a.desc}</span></div></div>)}
-          </div>
+        {recent.length === 0 ? (
+          <div className="empty-state"><div className="empty-icon">🏆</div><p>No achievements yet</p></div>
+        ) : (
+          <ul className="ach-list">
+            {recent.map(a => (
+              <li key={a.id}><span className="ach-icon">{a.icon}</span><div><strong>{a.name}</strong><div className="muted">{a.description}</div></div></li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
-  )
+  );
 }

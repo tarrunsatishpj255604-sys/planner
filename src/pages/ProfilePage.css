@@ -1,37 +1,25 @@
-.profile-page { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
-
-.profile-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 28px 32px; border-radius: var(--radius); box-shadow: var(--shadow-md); }
-.profile-banner-info { display: flex; align-items: center; gap: 20px; }
-.profile-avatar { width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
-.profile-banner-info h1 { font-size: 24px; font-weight: 800; }
-.profile-level-badge { padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; display: inline-block; margin-top: 4px; }
-.profile-edit-btn:hover { background: rgba(255,255,255,0.3) !important; }
+.profile-page { display: flex; flex-direction: column; gap: 20px; }
+.profile-banner { display: flex; align-items: center; gap: 20px; padding: 24px; background: linear-gradient(135deg, var(--primary, #6366f1), var(--accent, #8b5cf6)); border-radius: 18px; color: #fff; }
+.profile-avatar { font-size: 4rem; background: rgba(255,255,255,0.2); width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.profile-info { flex: 1; }
+.profile-info h1 { margin: 0 0 6px; }
+.level-badge { display: inline-block; padding: 4px 12px; background: rgba(255,255,255,0.25); border-radius: 999px; font-size: 0.85rem; }
+.profile-banner .btn-outline { color: #fff; border-color: rgba(255,255,255,0.5); }
 
 .avatar-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-.avatar-swatch { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-2); border: 2px solid transparent; transition: all var(--transition); }
-.avatar-swatch:hover { transform: scale(1.1); }
-.avatar-swatch.selected { border-color: var(--primary); background: var(--primary-l); }
+.avatar-opt { width: 44px; height: 44px; border-radius: 10px; border: 2px solid var(--bg-3, #e5e7eb); background: var(--bg-1, #fff); font-size: 1.4rem; cursor: pointer; }
+.avatar-opt.active { border-color: var(--primary, #6366f1); }
 
-.xp-card .level-badge { padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 12px; font-weight: 700; }
-.xp-progress-wrap { display: flex; align-items: center; gap: 12px; }
-.xp-progress-bar { flex: 1; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
-.xp-progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
-.xp-progress-text { font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
-.xp-hint { font-size: 13px; color: var(--text-2); margin-top: 10px; }
+.xp-bar { height: 12px; background: var(--bg-3, #e5e7eb); border-radius: 999px; overflow: hidden; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, var(--primary, #6366f1), var(--accent, #8b5cf6)); transition: width .4s; }
+.xp-text { font-size: 0.82rem; opacity: 0.7; margin-top: 6px; }
 
-.stat-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; }
-.stat-emoji { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-2); flex-shrink: 0; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-value { font-size: 20px; font-weight: 800; }
-.stat-label { font-size: 12px; color: var(--text-2); }
+.stat-card { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.stat-icon { font-size: 1.8rem; }
+.stat-value { font-size: 1.7rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; opacity: 0.7; }
 
-.profile-achievements { display: flex; flex-direction: column; gap: 8px; }
-.pa-item { display: flex; align-items: center; gap: 14px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
-.pa-icon { font-size: 28px; }
-.pa-item > div { display: flex; flex-direction: column; }
-.pa-title { font-size: 14px; font-weight: 700; }
-.pa-desc { font-size: 12px; color: var(--text-2); }
-
-@media (max-width: 768px) {
-  .profile-banner { flex-direction: column; text-align: center; }
-}
+.ach-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ach-list li { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg-2, #f8fafc); border-radius: 10px; }
+.ach-icon { font-size: 1.6rem; }
+.muted { font-size: 0.82rem; opacity: 0.6; }
