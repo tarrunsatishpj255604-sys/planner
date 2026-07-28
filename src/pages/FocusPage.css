@@ -1,18 +1,29 @@
 .focus-page { display: flex; flex-direction: column; gap: 20px; }
-.focus-page.fullscreen { position: fixed; inset: 0; background: var(--bg-0, #0f172a); z-index: 1000; padding: 40px; overflow-y: auto; }
-.focus-main { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-.mode-tabs { display: flex; gap: 6px; }
-.mode-tab { padding: 8px 18px; border: 1px solid var(--bg-3, #e5e7eb); background: var(--bg-1, #fff); color: inherit; border-radius: 999px; cursor: pointer; }
-.mode-tab.active { background: var(--primary, #6366f1); color: #fff; border-color: var(--primary, #6366f1); }
-.timer-ring text { font-variant-numeric: tabular-nums; }
-.presets { display: flex; gap: 8px; }
-.preset { padding: 8px 16px; border: 1px solid var(--bg-3, #e5e7eb); background: var(--bg-1, #fff); color: inherit; border-radius: 8px; cursor: pointer; }
-.preset.active { background: var(--primary, #6366f1); color: #fff; border-color: var(--primary, #6366f1); }
-.timer-controls { display: flex; gap: 10px; }
-.sound-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-.sound-chip { padding: 6px 12px; border: 1px solid var(--bg-3, #e5e7eb); background: var(--bg-1, #fff); color: inherit; border-radius: 999px; cursor: pointer; font-size: 0.82rem; }
-.sound-chip.active { background: var(--accent, #8b5cf6); color: #fff; border-color: var(--accent, #8b5cf6); }
-.focus-options { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
-.session-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.session-list li { display: flex; justify-content: space-between; padding: 8px 10px; background: var(--bg-2, #f8fafc); border-radius: 8px; }
-.session-list .muted { opacity: 0.6; font-size: 0.82rem; }
+.focus-main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+.focus-timer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.focus-modes { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: var(--radius-sm); }
+.focus-mode-btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-2); transition: all var(--transition); }
+.focus-mode-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+.focus-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.focus-ring { width: 280px; height: 280px; }
+.focus-ring-text { position: absolute; display: flex; flex-direction: column; align-items: center; }
+.focus-time { font-size: 48px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.focus-mode-label { font-size: 13px; color: var(--text-2); text-transform: uppercase; font-weight: 600; margin-top: 4px; }
+.focus-controls { display: flex; gap: 10px; align-items: center; }
+.focus-start { padding: 12px 32px; font-size: 15px; }
+.focus-presets { display: flex; gap: 8px; }
+.focus-preset { padding: 6px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface-2); transition: all var(--transition); }
+.focus-preset:hover { background: var(--primary-l); color: var(--primary); }
+.focus-preset.active { background: var(--primary); color: #fff; }
+.focus-side { display: flex; flex-direction: column; gap: 16px; }
+.ambient-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ambient-chip { padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface-2); transition: all var(--transition); }
+.ambient-chip:hover { background: var(--primary-l); color: var(--primary); }
+.ambient-chip.active { background: var(--primary); color: #fff; }
+.focus-sess-list { display: flex; flex-direction: column; gap: 8px; }
+.focus-sess-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.fs-sub { flex: 1; font-size: 14px; font-weight: 500; }
+.fs-dur { font-size: 13px; font-weight: 700; color: var(--primary); }
+.fs-mode { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--primary-l); color: var(--primary); font-weight: 600; }
+@media (max-width: 900px) { .focus-main { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .focus-ring { width: 220px; height: 220px; } .focus-time { font-size: 36px; } }

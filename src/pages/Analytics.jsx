@@ -1,66 +1,93 @@
-import { useMemo } from 'react';
-import { useApp } from '../lib/AppContext.jsx';
-import { getStreak, todayStr } from '../lib/helpers.js';
-import './AnalyticsPage.css';
+import { useMemo } from 'react'
+import { useApp } from '../lib/AppContext.jsx'
+import { getStreak } from '../lib/helpers.js'
+import './AnalyticsPage.css'
 
 export default function Analytics() {
-  const { profile, subjects, tasks, sessions } = useApp();
+  const { sessions, tasks, subjects } = useApp()
 
-  const totalTime = useMemo(() => (sessions || []).reduce((s, x) => s + (x.duration || 0), 0), [sessions]);
-  const streak = getStreak(profile);
-  const tasksDone = useMemo(() => (tasks || []).filter(t => t.completed).length, [tasks]);
-  const completionRate = (tasks || []).length ? Math.round((tasksDone / tasks.length) * 100) : 0;
+  const streak = useMemo(() => getStreak(sessions), [sessions])
+  const totalTime = useMemo(() => sessions.reduce((a, s) => a + (s.duration || 0), 0), [sessions])
+  const tasksDone = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
+  const completionRate = tasks.length > 0 ? Math.round((tasksDone / tasks.length) * 100) : 0
 
-  const weekly = useMemo(() => {
-    const days = [];
+  const weekData = useMemo(() => {
+    const days = []
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const ds = d.toISOString().slice(0, 10);
-      const total = (sessions || []).filter(s => (s.date || s.created_at || '').slice(0, 10) === ds).reduce((sum, s) => sum + (s.duration || 0), 0);
-      days.push({ label: d.toLocaleDateString(undefined, { weekday: 'short' }), total });
+      const d = new Date(); d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      const mins = sessions.filter(s => s.session_date === ds).reduce((a, s) => a + (s.duration || 0), 0)
+      days.push({ date: ds, label: d.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0), mins })
     }
-    return days;
-  }, [sessions]);
-  const maxWeekly = Math.max(1, ...weekly.map(d => d.total));
+    return days
+  }, [sessions])
 
-  const heatmap = useMemo(() => {
-    const cells = [];
+  const maxWeekMins = Math.max(...weekData.map(d => d.mins), 60)
+
+  const heatmapData = useMemo(() => {
+    const days = []
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const ds = d.toISOString().slice(0, 10);
-      const total = (sessions || []).filter(s => (s.date || s.created_at || '').slice(0, 10) === ds).reduce((sum, s) => sum + (s.duration || 0), 0);
-      cells.push({ date: ds, total });
+      const d = new Date(); d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      const mins = sessions.filter(s => s.session_date === ds).reduce((a, s) => a + (s.duration || 0), 0)
+      days.push({ date: ds, mins })
     }
-    return cells;
-  }, [sessions]);
-  const maxHeat = Math.max(1, ...heatmap.map(c => c.total));
+    return days
+  }, [sessions])
 
-  const subjectComparison = useMemo(() => {
-    return (subjects || []).map(s => ({
-      name: s.name, color: s.color,
-      time: (sessions || []).filter(x => x.subject_id === s.id).reduce((sum, x) => sum + (x.duration || 0), 0),
-    })).sort((a, b) => b.time - a.time);
-  }, [subjects, sessions]);
-  const maxSubj = Math.max(1, ...subjectComparison.map(s => s.time));
+  const subjectData = useMemo(() => {
+    return subjects.map(s => {
+      const time = sessions.filter(sess => sess.subject_id === s.id).reduce((a, sess) => a + (sess.duration || 0), 0)
+      return { ...s, time }
+    }).filter(s => s.time > 0).sort((a, b) => b.time - a.time)
+  }, [sessions, subjects])
+
+  const maxSubjectTime = Math.max(...subjectData.map(s => s.time), 60)
+
+  const heatLevel = (mins) => { if (mins === 0) return 0; if (mins < 30) return 1; if (mins < 60) return 2; if (mins < 120) return 3; return 4 }
 
   return (
     <div className="analytics-page">
-      <div className="page-toolbar"><div><h2>Analytics</h2><p className="page-desc">Track your study progress</p></div></div>
+      <div className="page-toolbar">
+        <div>
+          <h2>Analytics</h2>
+          <p className="page-desc">Track your study progress with detailed insights and charts.</p>
+        </div>
+      </div>
 
       <div className="grid-4">
-        <div className="card stat-card"><div className="stat-icon">⏱️</div><div className="stat-value">{Math.round(totalTime)}m</div><div className="stat-label">Total Time</div></div>
-        <div className="card stat-card"><div className="stat-icon">🔥</div><div className="stat-value">{streak}</div><div className="stat-label">Day Streak</div></div>
-        <div className="card stat-card"><div className="stat-icon">✅</div><div className="stat-value">{tasksDone}</div><div className="stat-label">Tasks Done</div></div>
-        <div className="card stat-card"><div className="stat-icon">📊</div><div className="stat-value">{completionRate}%</div><div className="stat-label">Completion</div></div>
+        <div className="card an-stat-card">
+          <div className="an-stat-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>⏱️</div>
+          <span className="an-stat-val">{Math.round(totalTime / 60 * 10) / 10}h</span>
+          <span className="an-stat-label">Total Time</span>
+        </div>
+        <div className="card an-stat-card">
+          <div className="an-stat-icon" style={{ background: 'var(--warning-l)', color: 'var(--warning)' }}>🔥</div>
+          <span className="an-stat-val">{streak}</span>
+          <span className="an-stat-label">Day Streak</span>
+        </div>
+        <div className="card an-stat-card">
+          <div className="an-stat-icon" style={{ background: 'var(--success-l)', color: 'var(--success)' }}>✅</div>
+          <span className="an-stat-val">{tasksDone}</span>
+          <span className="an-stat-label">Tasks Done</span>
+        </div>
+        <div className="card an-stat-card">
+          <div className="an-stat-icon" style={{ background: '#fce7f3', color: 'var(--accent)' }}>📊</div>
+          <span className="an-stat-val">{completionRate}%</span>
+          <span className="an-stat-label">Completion Rate</span>
+        </div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>This Week</h3></div>
-        <div className="weekly-chart">
-          {weekly.map((d, i) => (
-            <div className="weekly-bar" key={i}>
-              <div className="bar-wrap"><div className="bar" style={{ height: `${(d.total / maxWeekly) * 100}%` }} title={`${d.total}m`} /></div>
-              <div className="bar-label">{d.label}</div>
+        <div className="an-week-chart">
+          {weekData.map((d, i) => (
+            <div key={i} className="an-week-col">
+              <div className="an-week-bar-track">
+                <div className="an-week-bar-fill" style={{ height: `${(d.mins / maxWeekMins) * 100}%`, background: d.mins > 0 ? 'var(--primary)' : 'var(--border)' }} />
+              </div>
+              <span className="an-week-label">{d.label}</span>
+              <span className="an-week-val">{d.mins}m</span>
             </div>
           ))}
         </div>
@@ -68,29 +95,32 @@ export default function Analytics() {
 
       <div className="card">
         <div className="card-head"><h3>Last 30 Days</h3></div>
-        <div className="heatmap">
-          {heatmap.map((c, i) => (
-            <div className="heat-cell" key={i}
-              style={{ background: c.total === 0 ? 'var(--bg-3, #e5e7eb)' : `rgba(99,102,241,${0.3 + 0.7 * (c.total / maxHeat)})` }}
-              title={`${c.date}: ${c.total}m`} />
+        <div className="an-heatmap">
+          {heatmapData.map((d, i) => (
+            <div key={i} className={`an-heat-cell level-${heatLevel(d.mins)}`} title={`${d.date}: ${d.mins}m`} />
           ))}
+        </div>
+        <div className="an-heat-legend">
+          <span>Less</span>
+          <div className="an-heat-cell level-0" /><div className="an-heat-cell level-1" /><div className="an-heat-cell level-2" /><div className="an-heat-cell level-3" /><div className="an-heat-cell level-4" />
+          <span>More</span>
         </div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>Subject Comparison</h3></div>
-        {subjectComparison.length === 0 ? <div className="empty-state"><p>No data</p></div> : (
-          <div className="subj-bars">
-            {subjectComparison.map(s => (
-              <div className="subj-bar-row" key={s.name}>
-                <span className="subj-name">{s.name}</span>
-                <div className="subj-bar-track"><div className="subj-bar-fill" style={{ width: `${(s.time / maxSubj) * 100}%`, background: s.color }} /></div>
-                <span className="subj-time">{Math.round(s.time)}m</span>
+        {subjectData.length === 0 ? <p className="dash-empty">No study time logged yet.</p> : (
+          <div className="an-subject-list">
+            {subjectData.map(s => (
+              <div key={s.id} className="an-subject-row">
+                <span className="an-subject-name">{s.icon} {s.name}</span>
+                <div className="an-subject-bar"><div className="an-subject-fill" style={{ width: `${(s.time / maxSubjectTime) * 100}%`, background: s.color }} /></div>
+                <span className="an-subject-time">{Math.round(s.time)}m</span>
               </div>
             ))}
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }
