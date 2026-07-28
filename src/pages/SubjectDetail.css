@@ -1,0 +1,91 @@
+.subject-detail { animation: fadeIn 0.3s ease; }
+
+.sd-header {
+  padding: 24px 28px; border-radius: var(--radius); color: #fff;
+  display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;
+}
+.sd-back {
+  display: flex; align-items: center; gap: 6px; color: #fff; font-size: 14px;
+  font-weight: 600; opacity: 0.85; transition: opacity var(--transition); align-self: flex-start;
+}
+.sd-back:hover { opacity: 1; }
+.sd-title-row { display: flex; align-items: center; gap: 16px; }
+.sd-icon { font-size: 40px; }
+.sd-title-row h2 { font-size: 26px; font-weight: 800; }
+.sd-grade { font-size: 14px; opacity: 0.85; }
+.sd-quick-stats { display: flex; gap: 28px; }
+.sd-quick-stats div { font-size: 14px; opacity: 0.9; }
+.sd-quick-stats strong { font-size: 18px; font-weight: 800; display: block; }
+
+.sd-tabs {
+  display: flex; gap: 4px; border-bottom: 2px solid var(--border);
+  overflow-x: auto; margin-bottom: 24px;
+}
+.sd-tab {
+  padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--text-2);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all var(--transition); white-space: nowrap;
+}
+.sd-tab:hover { color: var(--text); }
+.sd-tab.active { color: var(--primary); }
+
+.sd-content { animation: fadeIn 0.2s ease; }
+.sd-overview { display: flex; flex-direction: column; gap: 16px; }
+.sd-overview .card h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.sd-prog-ring { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+.sd-ring { width: 100%; height: 100%; }
+.sd-prog-pct {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800;
+}
+.sd-big-num { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+.sd-sub-text { font-size: 13px; color: var(--text-2); }
+.sd-note-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+.sd-tab-content { display: flex; flex-direction: column; gap: 16px; }
+.sd-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sd-input {
+  flex: 1; min-width: 140px; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 14px; outline: none; background: var(--surface); color: var(--text);
+}
+.sd-input:focus { border-color: var(--primary); }
+.sd-input::placeholder { color: var(--text-3); }
+.sd-list { display: flex; flex-direction: column; gap: 8px; }
+.sd-task-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border);
+}
+.sd-task-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sd-task-title { font-size: 14px; font-weight: 600; }
+.sd-task-due { font-size: 12px; color: var(--text-2); }
+.sd-session-note { font-size: 13px; color: var(--text-2); font-style: italic; }
+
+.sd-note-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+  border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border);
+}
+.sd-note-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.sd-note-title { font-size: 14px; font-weight: 600; }
+.sd-note-content { font-size: 13px; color: var(--text-2); }
+
+.fc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.fc-card {
+  position: relative; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+}
+.fc-front { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.fc-back { font-size: 13px; color: var(--text-2); }
+.fc-del { position: absolute; top: 8px; right: 8px; }
+
+.sd-resource-item {
+  display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+  border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border);
+  font-size: 14px; font-weight: 600; color: var(--primary); transition: background var(--transition);
+}
+.sd-resource-item:hover { background: var(--surface-2); }
+
+@media (max-width: 768px) {
+  .sd-header { padding: 20px; }
+  .sd-quick-stats { flex-wrap: wrap; gap: 16px; }
+  .fc-grid { grid-template-columns: 1fr; }
+}

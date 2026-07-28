@@ -1,0 +1,45 @@
+.profile-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 16px; }
+
+.profile-banner {
+  display: flex; align-items: center; gap: 20px; padding: 28px 32px;
+  border-radius: var(--radius); color: #fff;
+}
+.profile-avatar { font-size: 56px; }
+.profile-info { flex: 1; }
+.profile-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.profile-level-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  background: rgba(255,255,255,0.2); font-size: 13px; font-weight: 700;
+}
+.profile-edit { }
+
+.avatar-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-opt {
+  width: 40px; height: 40px; border-radius: 10px; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--border); transition: all var(--transition);
+}
+.avatar-opt:hover { background: var(--surface-2); }
+.avatar-opt.sel { border-color: var(--primary); background: var(--primary-l); }
+
+.profile-xp-card { }
+.pxp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pxp-badge { padding: 4px 14px; border-radius: 20px; color: #fff; font-size: 14px; font-weight: 700; }
+.pxp-total { font-size: 18px; font-weight: 800; }
+.pxp-bar { height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+.pxp-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.pxp-text { font-size: 13px; color: var(--text-2); font-weight: 600; }
+
+.stat-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 24px 20px; }
+.ps-big { font-size: 28px; font-weight: 800; }
+.ps-label { font-size: 13px; color: var(--text-2); }
+
+.profile-achievements { display: flex; flex-direction: column; gap: 8px; }
+.pa-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.pa-icon { font-size: 24px; }
+.pa-title { font-size: 14px; font-weight: 600; display: block; text-transform: capitalize; }
+.pa-date { font-size: 12px; color: var(--text-2); }
+
+@media (max-width: 768px) {
+  .profile-banner { flex-direction: column; text-align: center; }
+}

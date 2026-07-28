@@ -1,0 +1,54 @@
+.settings-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 16px; }
+
+.theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.theme-card {
+  border-radius: var(--radius); padding: 8px; cursor: pointer; transition: all var(--transition);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.theme-card:hover { transform: translateY(-2px); }
+.theme-preview {
+  border-radius: 8px; padding: 8px; display: flex; gap: 6px; height: 64px; overflow: hidden;
+}
+.tp-bar { width: 20px; border-radius: 4px; flex-shrink: 0; }
+.tp-content { flex: 1; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.tp-line { height: 5px; border-radius: 3px; }
+.tp-line.short { width: 60%; }
+.tp-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 2px; }
+.theme-name { font-size: 12px; font-weight: 600; text-align: center; }
+
+.settings-row { display: flex; gap: 16px; margin-bottom: 16px; }
+.settings-row .form-field { flex: 1; }
+
+.color-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  border: 3px solid transparent; transition: all var(--transition);
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.selected { border-color: var(--text); }
+.color-input { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: transparent; }
+
+.settings-slider { width: 100%; accent-color: var(--primary); }
+
+.settings-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-top: 1px solid var(--border);
+}
+.toggle-switch {
+  width: 44px; height: 24px; border-radius: 12px; background: var(--border);
+  position: relative; transition: background var(--transition);
+}
+.toggle-switch.on { background: var(--primary); }
+.toggle-knob {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff; transition: transform var(--transition);
+}
+.toggle-switch.on .toggle-knob { transform: translateX(20px); }
+
+@media (max-width: 768px) {
+  .theme-grid { grid-template-columns: repeat(3, 1fr); }
+  .settings-row { flex-direction: column; gap: 12px; }
+}
+@media (max-width: 480px) {
+  .theme-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,31 @@
+.analytics-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 16px; }
+
+.stat-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 24px 20px; }
+.ana-big-num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.ana-label { font-size: 13px; color: var(--text-2); }
+
+.ana-bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 8px; }
+.ana-bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.ana-bar-track { width: 32px; height: 130px; display: flex; align-items: flex-end; border-radius: 6px; overflow: hidden; }
+.ana-bar-fill { width: 100%; border-radius: 6px; min-height: 4px; transition: height 0.4s ease; }
+.ana-bar-label { font-size: 12px; color: var(--text-3); font-weight: 600; }
+.ana-bar-val { font-size: 11px; color: var(--text-2); font-weight: 600; }
+
+.ana-heatmap { display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; }
+.ana-heat-cell { aspect-ratio: 1; border-radius: 4px; min-width: 20px; min-height: 20px; transition: transform var(--transition); }
+.ana-heat-cell:hover { transform: scale(1.2); }
+.ana-heat-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--text-3); }
+.ana-heat-legend .ana-heat-cell { width: 16px; height: 16px; min-width: 16px; min-height: 16px; }
+
+.ana-subject-list { display: flex; flex-direction: column; gap: 14px; }
+.ana-subject-row { display: flex; align-items: center; gap: 12px; }
+.ana-subject-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; width: 160px; flex-shrink: 0; }
+.ana-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ana-subject-bar { flex: 1; height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.ana-subject-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+.ana-subject-time { font-size: 13px; font-weight: 600; color: var(--text-2); width: 60px; text-align: right; }
+
+@media (max-width: 768px) {
+  .ana-heatmap { grid-template-columns: repeat(10, 1fr); }
+  .ana-subject-name { width: 100px; }
+}

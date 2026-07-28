@@ -1,0 +1,49 @@
+.tasks-page { animation: fadeIn 0.3s ease; }
+
+.seg-pick { display: flex; gap: 8px; }
+.seg-btn {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; color: var(--text-2); transition: all var(--transition);
+}
+.seg-btn:hover { background: var(--surface-2); }
+.seg-btn.sel { border-width: 1.5px; }
+
+.task-filters { display: flex; gap: 8px; margin-bottom: 16px; }
+.filter-chip {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  background: var(--surface); border: 1px solid var(--border); transition: all var(--transition);
+}
+.filter-chip:hover { background: var(--surface-2); }
+.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.fc-count { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--surface-2); color: var(--text-2); }
+.filter-chip.active .fc-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+.task-list-full { display: flex; flex-direction: column; gap: 8px; }
+.task-row-full {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  transition: all var(--transition);
+}
+.task-row-full:hover { box-shadow: var(--shadow-sm); }
+.task-row-full.done { opacity: 0.6; }
+.task-row-full.done .task-title-full { text-decoration: line-through; color: var(--text-3); }
+
+.task-check-lg {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
+  flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.task-check-lg:hover { border-color: var(--primary); }
+
+.task-info-full { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.task-title-full { font-size: 15px; font-weight: 600; }
+.task-desc-full { font-size: 13px; color: var(--text-2); }
+.task-meta-full { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.tm-chip { display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.tm-dot { width: 6px; height: 6px; border-radius: 50%; }
+.tm-due { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+
+.task-actions-full { display: flex; gap: 2px; flex-shrink: 0; }
+
+@media (max-width: 768px) { .task-row-full { padding: 14px 16px; } }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabaseClient.js'
+import { AppProvider } from './lib/AppContext.jsx'
 import Landing from './pages/Landing.jsx'
 import AuthModal from './components/AuthModal.jsx'
-import Dashboard from './pages/Dashboard.jsx'
+import Shell from './Shell.jsx'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -15,11 +16,9 @@ export default function App() {
       setSession(data.session)
       setLoading(false)
     })
-
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess)
     })
-
     return () => sub.subscription.unsubscribe()
   }, [])
 
@@ -30,14 +29,18 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 24, height: 24 }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f7f8fc' }}>
+        <div className="spinner" style={{ borderColor: '#e2e6ef', borderTopColor: '#4f7cff', width: 28, height: 28 }} />
       </div>
     )
   }
 
   if (session) {
-    return <Dashboard session={session} />
+    return (
+      <AppProvider session={session}>
+        <Shell session={session} />
+      </AppProvider>
+    )
   }
 
   return (
