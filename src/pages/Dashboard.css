@@ -1,69 +1,56 @@
-.dashboard { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
-.dash-loading { display: flex; align-items: center; justify-content: center; padding: 80px 0; }
+.dashboard { display: flex; flex-direction: column; gap: 20px; }
 
-.welcome-banner { display: flex; align-items: center; justify-content: space-between; padding: 28px 32px; border-radius: var(--radius); color: #fff; box-shadow: var(--shadow-md); }
-.welcome-text h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
-.welcome-text p { font-size: 15px; opacity: 0.92; }
-.welcome-streak { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 10px 18px; border-radius: var(--radius-sm); }
-.streak-flame { font-size: 28px; }
-.streak-num { font-size: 28px; font-weight: 800; }
-
-.stat-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; }
-.stat-emoji { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-2); flex-shrink: 0; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-value { font-size: 20px; font-weight: 800; }
-.stat-label { font-size: 12px; color: var(--text-2); }
-
-.dash-main .dash-tasks { display: flex; flex-direction: column; gap: 8px; }
-.dash-task { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
-.dash-task-title { flex: 1; font-size: 14px; }
-.dash-task-title.done { text-decoration: line-through; color: var(--text-3); }
-.dash-task-subject { font-size: 18px; }
-.task-check.checked { display: flex; align-items: center; justify-content: center; }
-
-.goal-card { display: flex; flex-direction: column; }
-.goal-ring-wrap { display: flex; justify-content: center; padding: 8px 0; }
-.goal-ring-num { font-size: 24px; font-weight: 800; fill: var(--text); }
-.goal-ring-label { font-size: 11px; fill: var(--text-2); }
-
-.quick-note-input { display: flex; gap: 8px; margin-bottom: 12px; }
-.quick-note-input input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--text); outline: none; }
-.quick-note-input input:focus { border-color: var(--primary); }
-.quick-notes-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
-.quick-note-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
-.quick-note-item input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
-.qn-content { flex: 1; font-size: 14px; cursor: pointer; }
-.qn-delete { font-size: 14px; opacity: 0.6; }
-.qn-delete:hover { opacity: 1; color: var(--error); }
-
-.xp-card .level-badge { padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 12px; font-weight: 700; }
-.xp-progress-wrap { display: flex; align-items: center; gap: 12px; }
-.xp-progress-bar { flex: 1; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
-.xp-progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
-.xp-progress-text { font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
-.xp-hint { font-size: 13px; color: var(--text-2); margin-top: 10px; }
-
-.week-chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 160px; padding-top: 8px; }
-.week-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; height: 100%; }
-.week-bar-track { flex: 1; width: 100%; max-width: 36px; display: flex; align-items: flex-end; background: var(--surface-2); border-radius: 6px 6px 0 0; overflow: hidden; }
-.week-bar { width: 100%; border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; }
-.week-bar-label { font-size: 11px; color: var(--text-2); font-weight: 600; }
-.week-bar-mins { font-size: 10px; color: var(--text-3); }
-
-.dash-exams { display: flex; flex-direction: column; gap: 8px; }
-.dash-exam-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
-.exam-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.exam-info { display: flex; flex-direction: column; }
-.exam-title { font-size: 14px; font-weight: 600; }
-.exam-date { font-size: 12px; color: var(--text-2); }
-
-.quote-card .quote-content { display: flex; flex-direction: column; gap: 10px; }
-.quote-text { font-size: 18px; font-style: italic; line-height: 1.5; font-weight: 500; }
-.quote-author { font-size: 13px; color: var(--text-2); font-weight: 600; }
-
-.focus-shortcut { align-self: flex-start; padding: 14px 24px; font-size: 15px; }
-
-@media (max-width: 768px) {
-  .welcome-banner { flex-direction: column; gap: 16px; text-align: center; }
-  .week-chart { height: 120px; }
+.welcome-banner {
+  border-radius: 18px;
+  padding: 28px 32px;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
+.welcome-banner h1 { margin: 0 0 6px; font-size: 1.6rem; }
+.welcome-banner p { margin: 0; opacity: 0.92; }
+.welcome-quote { max-width: 320px; font-style: italic; opacity: 0.9; }
+.welcome-quote p { margin: 0; }
+
+.stat-card { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.stat-icon { font-size: 1.8rem; }
+.stat-value { font-size: 1.7rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; opacity: 0.7; }
+
+.today-tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.today-tasks li { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.today-tasks li.done .task-title { text-decoration: line-through; opacity: 0.5; }
+.task-info { flex: 1; }
+.task-title { font-weight: 500; }
+.task-meta { display: flex; gap: 6px; margin-top: 2px; }
+.chip { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--bg-2, #f1f5f9); }
+
+.goal-card .goal-ring { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0; }
+.goal-ring p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+
+.quick-note-add { display: flex; gap: 8px; margin-bottom: 12px; }
+.quick-note-add input { flex: 1; padding: 8px 12px; border: 1px solid var(--bg-3, #e5e7eb); border-radius: 8px; background: var(--bg-1, #fff); color: inherit; }
+.quick-note-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.quick-note-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg-2, #f8fafc); border-radius: 8px; gap: 8px; }
+.quick-note-list li span { font-size: 0.9rem; }
+
+.xp-card { display: flex; flex-direction: column; gap: 14px; }
+.xp-progress { display: flex; flex-direction: column; gap: 6px; }
+.xp-bar { height: 12px; background: var(--bg-3, #e5e7eb); border-radius: 999px; overflow: hidden; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, var(--primary, #6366f1), var(--accent, #8b5cf6)); transition: width .4s; }
+.xp-text { font-size: 0.82rem; opacity: 0.7; }
+
+.weekly-chart { display: flex; gap: 10px; align-items: flex-end; height: 160px; padding-top: 10px; }
+.weekly-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; }
+.bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.bar { width: 70%; max-width: 36px; background: linear-gradient(180deg, var(--primary, #6366f1), var(--accent, #8b5cf6)); border-radius: 6px 6px 0 0; min-height: 4px; transition: height .4s; }
+.bar-label { font-size: 0.72rem; opacity: 0.6; }
+
+.exam-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.exam-list li { display: flex; align-items: center; gap: 10px; }
+.exam-dot { width: 10px; height: 10px; border-radius: 50%; }
+.exam-title { flex: 1; font-weight: 500; }
+.exam-date { font-size: 0.82rem; opacity: 0.7; }

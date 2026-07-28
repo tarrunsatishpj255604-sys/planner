@@ -1,147 +1,154 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useApp } from '../lib/AppContext.jsx'
-import { supabase } from '../lib/supabaseClient.js'
-import { todayStr, XP_REWARDS, formatDate } from '../lib/helpers.js'
-import './FocusPage.css'
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useApp } from '../lib/AppContext.jsx';
+import { supabase } from '../lib/supabaseClient.js';
+import { XP_REWARDS, todayStr } from '../lib/helpers.js';
+import './FocusPage.css';
 
-const MODES = { pomodoro: 'Pomodoro', stopwatch: 'Stopwatch', countdown: 'Countdown' }
-const PRESETS = [15, 25, 45, 60]
-const SOUNDS = ['🌧️ Rain', '🔥 Fireplace', '🌊 Ocean', '☕ Cafe', '🌳 Forest', '🔇 Silence']
+const PRESETS = [15, 25, 45, 60];
+const SOUNDS = ['🌧️ Rain', '🌊 Ocean', '🔥 Fireplace', '☕ Café', '🌲 Forest', '🔇 Silence'];
 
 export default function Focus() {
-  const { subjects, sessions, refresh, addXp, unlockAchievement, loading } = useApp()
-  const [mode, setMode] = useState('pomodoro')
-  const [duration, setDuration] = useState(25)
-  const [remaining, setRemaining] = useState(25 * 60)
-  const [running, setRunning] = useState(false)
-  const [subjectId, setSubjectId] = useState('')
-  const [notes, setNotes] = useState('')
-  const [ambient, setAmbient] = useState('🔇 Silence')
-  const [fullscreen, setFullscreen] = useState(false)
-  const containerRef = useRef(null)
-  const intervalRef = useRef(null)
-  const today = todayStr()
-
-  const todaySessions = (sessions || []).filter(s => s.session_date === today)
+  const { profile, subjects, sessions, refresh, addXp, unlockAchievement } = useApp();
+  const [mode, setMode] = useState('pomodoro'); // pomodoro | stopwatch | countdown
+  const [duration, setDuration] = useState(25 * 60); // seconds
+  const [remaining, setRemaining] = useState(25 * 60);
+  const [running, setRunning] = useState(false);
+  const [subjectId, setSubjectId] = useState('');
+  const [note, setNote] = useState('');
+  const [sound, setSound] = useState('🔇 Silence');
+  const [fullscreen, setFullscreen] = useState(false);
+  const intervalRef = useRef(null);
+  const startRef = useRef(null);
 
   useEffect(() => {
-    if (mode === 'pomodoro') { setDuration(25); setRemaining(25 * 60) }
-    else if (mode === 'countdown') { setDuration(15); setRemaining(15 * 60) }
-    else { setRemaining(0) }
-    setRunning(false)
-  }, [mode])
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setRemaining(prev => {
-          if (mode === 'stopwatch') return prev + 1
-          if (prev <= 1) { clearInterval(intervalRef.current); setRunning(false); handleComplete(); return 0 }
-          return prev - 1
-        })
-      }, 1000)
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [running, mode])
+    if (!running) return;
+    intervalRef.current = setInterval(() => {
+      setRemaining(prev => {
+        if (mode === 'stopwatch') return prev + 1;
+        if (prev <= 1) { handleComplete(); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, mode]);
 
   const handleComplete = useCallback(async () => {
-    await logSession(true)
-  }, [])
+    setRunning(false);
+    const elapsed = mode === 'stopwatch' ? remaining : duration;
+    await logSession(elapsed);
+  }, [remaining, duration, mode]);
 
-  const logSession = async (auto = false) => {
-    const elapsed = mode === 'stopwatch' ? remaining : duration - remaining
-    if (elapsed < 1 && !auto) return
-    const mins = Math.max(1, Math.round(elapsed / 60))
-    await supabase.from('study_sessions').insert({ subject_id: subjectId || null, duration_minutes: mins, session_date: today, mode, notes })
-    await addXp(XP_REWARDS.study_session + (mode === 'pomodoro' ? XP_REWARDS.pomodoro : 0))
-    unlockAchievement('first_session')
-    const pomodoroCount = (sessions || []).filter(s => s.mode === 'pomodoro').length + (mode === 'pomodoro' ? 1 : 0)
-    if (pomodoroCount >= 10) unlockAchievement('pomodoro_10')
-    const totalMins = (sessions || []).reduce((sum, s) => sum + s.duration_minutes, 0) + mins
-    if (totalMins >= 600) unlockAchievement('hours_10')
-    if (totalMins >= 3000) unlockAchievement('hours_50')
-    refresh()
-    if (mode !== 'stopwatch') { setRemaining(duration * 60) }
-    setRunning(false)
-  }
+  const logSession = async (secs) => {
+    const minutes = Math.round(secs / 60);
+    if (minutes <= 0) return;
+    try {
+      await supabase.from('study_sessions').insert({
+        user_id: profile?.id, subject_id: subjectId || null,
+        duration: minutes, date: todayStr(), notes: note, mode,
+      });
+      await addXp((XP_REWARDS.focus_minute || 2) * minutes);
+      if (unlockAchievement) await unlockAchievement('first_focus');
+      refresh();
+    } catch (e) { console.error(e); }
+  };
 
-  const start = () => setRunning(true)
-  const pause = () => setRunning(false)
-  const reset = () => { setRunning(false); setRemaining(mode === 'stopwatch' ? 0 : duration * 60) }
+  const start = () => { startRef.current = Date.now(); setRunning(true); };
+  const pause = () => setRunning(false);
+  const reset = () => { setRunning(false); setRemaining(mode === 'stopwatch' ? 0 : duration); };
 
-  const setPreset = (mins) => { setDuration(mins); setRemaining(mins * 60); setRunning(false) }
+  const setPreset = (min) => { setDuration(min * 60); setRemaining(min * 60); setRunning(false); };
 
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) { await containerRef.current?.requestFullscreen?.(); setFullscreen(true) }
-    else { await document.exitFullscreen?.(); setFullscreen(false) }
-  }
+  const switchMode = (m) => {
+    setMode(m);
+    setRunning(false);
+    if (m === 'stopwatch') setRemaining(0);
+    else setRemaining(duration);
+  };
 
-  const ringR = 130, ringC = 2 * Math.PI * ringR
-  const displayTime = mode === 'stopwatch' ? remaining : remaining
-  const progress = mode === 'stopwatch' ? 0 : duration > 0 ? 1 - remaining / (duration * 60) : 0
-  const mm = Math.floor(displayTime / 60).toString().padStart(2, '0')
-  const ss = (displayTime % 60).toString().padStart(2, '0')
+  const total = mode === 'stopwatch' ? Math.max(remaining, 60) : duration;
+  const pct = mode === 'stopwatch' ? 0 : (1 - remaining / duration) * 100;
+  const circumference = 2 * Math.PI * 120;
+  const dashOffset = circumference - (pct / 100) * circumference;
 
-  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
+  const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+  const ss = String(remaining % 60).padStart(2, '0');
+
+  const todaySessions = (sessions || []).filter(s => (s.date || s.created_at || '').slice(0, 10) === todayStr());
 
   return (
-    <div className="focus-page" ref={containerRef}>
+    <div className={`focus-page ${fullscreen ? 'fullscreen' : ''}`}>
       <div className="page-toolbar">
-        <div><h2>Focus</h2><p className="page-desc">Stay focused and track your study sessions.</p></div>
-        <button className="btn btn-outline btn-sm" onClick={toggleFullscreen}>⛶ Fullscreen</button>
+        <div><h2>Focus</h2><p className="page-desc">Stay on track with timed sessions</p></div>
+        <button className="btn btn-outline btn-sm" onClick={() => setFullscreen(f => !f)}>{fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</button>
       </div>
 
       <div className="focus-main">
-        <div className="focus-modes">
-          {Object.entries(MODES).map(([k, v]) => <button key={k} className={`focus-mode ${mode === k ? 'active' : ''}`} onClick={() => setMode(k)}>{v}</button>)}
+        <div className="mode-tabs">
+          {['pomodoro','stopwatch','countdown'].map(m => (
+            <button key={m} className={`mode-tab ${mode === m ? 'active' : ''}`} onClick={() => switchMode(m)}>{m[0].toUpperCase() + m.slice(1)}</button>
+          ))}
         </div>
 
-        <div className="focus-ring-wrap">
-          <svg width="300" height="300" viewBox="0 0 300 300" className="focus-ring">
-            <circle cx="150" cy="150" r={ringR} fill="none" stroke="var(--surface-2)" strokeWidth="14" />
-            <circle cx="150" cy="150" r={ringR} fill="none" stroke="var(--primary)" strokeWidth="14" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringC * (1 - progress)} transform="rotate(-90 150 150)" style={{ transition: 'stroke-dashoffset 0.5s linear' }} />
-            <text x="150" y="150" textAnchor="middle" className="focus-time">{mm}:{ss}</text>
-            <text x="150" y="178" textAnchor="middle" className="focus-mode-label">{MODES[mode]}</text>
+        <div className="timer-ring">
+          <svg width="280" height="280" viewBox="0 0 280 280">
+            <circle cx="140" cy="140" r="120" fill="none" stroke="var(--bg-3, #e5e7eb)" strokeWidth="12" />
+            <circle cx="140" cy="140" r="120" fill="none" stroke="var(--primary, #6366f1)" strokeWidth="12" strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={dashOffset} transform="rotate(-90 140 140)" />
+            <text x="140" y="145" textAnchor="middle" fontSize="48" fontWeight="700" fill="currentColor">{mm}:{ss}</text>
           </svg>
         </div>
 
         {mode !== 'stopwatch' && (
-          <div className="focus-presets">
-            {PRESETS.map(p => <button key={p} className={`focus-preset ${duration === p ? 'active' : ''}`} onClick={() => setPreset(p)}>{p}m</button>)}
+          <div className="presets">
+            {PRESETS.map(p => (
+              <button key={p} className={`preset ${duration === p * 60 ? 'active' : ''}`} onClick={() => setPreset(p)}>{p}m</button>
+            ))}
           </div>
         )}
 
-        <div className="focus-controls">
-          {!running ? <button className="btn btn-primary focus-btn" onClick={start}>▶ Start</button> : <button className="btn btn-primary focus-btn" onClick={pause}>⏸ Pause</button>}
-          <button className="btn btn-outline focus-btn" onClick={reset}>↺ Reset</button>
-          <button className="btn btn-outline focus-btn" onClick={() => logSession(false)} disabled={mode === 'stopwatch' ? remaining < 1 : remaining === duration * 60}>💾 Log Session</button>
+        <div className="timer-controls">
+          {!running ? <button className="btn btn-primary" onClick={start}>Start</button> : <button className="btn btn-primary" onClick={pause}>Pause</button>}
+          <button className="btn btn-ghost" onClick={reset}>Reset</button>
+          <button className="btn btn-outline" onClick={() => logSession(mode === 'stopwatch' ? remaining : duration - remaining)}>Log Session</button>
         </div>
 
-        <div className="focus-ambient">
-          {SOUNDS.map(s => <button key={s} className={`filter-chip ${ambient === s ? 'active' : ''}`} onClick={() => setAmbient(s)}>{s}</button>)}
+        <div className="sound-chips">
+          {SOUNDS.map(s => (
+            <button key={s} className={`sound-chip ${sound === s ? 'active' : ''}`} onClick={() => setSound(s)}>{s}</button>
+          ))}
         </div>
 
-        <div className="grid-2 focus-config">
-          <div className="form-field"><label>Subject</label><select value={subjectId} onChange={e => setSubjectId(e.target.value)}><option value="">General Study</option>{(subjects || []).map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}</select></div>
-          <div className="form-field"><label>Session Notes</label><input type="text" placeholder="What are you studying?" value={notes} onChange={e => setNotes(e.target.value)} /></div>
+        <div className="focus-options">
+          <div className="form-field">
+            <label>Subject</label>
+            <select value={subjectId} onChange={e => setSubjectId(e.target.value)}>
+              <option value="">General</option>
+              {(subjects || []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div className="form-field">
+            <label>Notes</label>
+            <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="What are you working on?" />
+          </div>
         </div>
       </div>
 
       <div className="card">
-        <div className="card-head"><h3>Today's Sessions</h3><span className="fc-count">{todaySessions.length}</span></div>
-        {todaySessions.length === 0 ? <div className="dash-empty">No sessions logged today. Start studying! 📚</div> : (
-          <div className="focus-sessions">
+        <div className="card-head"><h3>Today’s Sessions</h3></div>
+        {todaySessions.length === 0 ? (
+          <div className="empty-state"><p>No sessions yet today</p></div>
+        ) : (
+          <ul className="session-list">
             {todaySessions.map(s => (
-              <div key={s.id} className="focus-session-item">
-                <span className="fs-icon">{s.mode === 'pomodoro' ? '🍅' : s.mode === 'countdown' ? '⏳' : '⏱️'}</span>
-                <div className="fs-info"><span className="fs-title">{s.duration_minutes}m · {s.mode}</span>{s.subject && <span className="fs-subject">{s.subject.icon} {s.subject.name}</span>}{s.notes && <span className="fs-notes">{s.notes}</span>}</div>
-              </div>
+              <li key={s.id}>
+                <span>{(subjects || []).find(x => x.id === s.subject_id)?.name || 'General'}</span>
+                <span>{s.duration}m</span>
+                <span className="muted">{s.mode}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>
-  )
+  );
 }

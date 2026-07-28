@@ -11,11 +11,14 @@
 .auth-tab.active { background: #fff; color: #1a1f36; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 .auth-body { display: flex; flex-direction: column; gap: 16px; }
 .auth-error { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; background: #fee8e8; color: #ef4444; font-size: 13px; font-weight: 500; }
+.auth-success { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 8px; background: #e8f9ee; color: #22c55e; font-size: 13px; font-weight: 500; line-height: 1.5; }
 .auth-field { display: flex; flex-direction: column; gap: 6px; }
 .auth-field label { font-size: 13px; font-weight: 600; color: #5a6378; }
 .auth-field input { padding: 10px 14px; border: 1px solid #e2e6ef; border-radius: 8px; font-size: 14px; transition: border-color 0.2s ease; outline: none; color: #1a1f36; }
 .auth-field input:focus { border-color: #4f7cff; }
 .auth-field input::placeholder { color: #9ca3b8; }
+.auth-forgot-link { align-self: flex-end; font-size: 13px; font-weight: 600; color: #4f7cff; margin-top: -8px; transition: opacity 0.2s ease; }
+.auth-forgot-link:hover { opacity: 0.75; }
 .auth-submit { width: 100%; padding: 12px; margin-top: 4px; }
 .auth-foot { text-align: center; font-size: 13px; color: #5a6378; display: flex; gap: 6px; justify-content: center; align-items: center; }
 .auth-foot button { color: #4f7cff; font-weight: 600; font-size: 13px; }
