@@ -49,7 +49,6 @@ export default function Landing({ onSignIn, onSignUp }) {
       </div></section>
       <section className="cta-section"><div className="cta-inner">
         <h2>Ready to plan your best year?</h2>
-        <p>Join thousands of students staying organized and ahead of their deadlines.</p>
         <button className="btn btn-primary" onClick={onSignUp} style={{ padding: '14px 32px', fontSize: 15 }}>Create your free account</button>
       </div></section>
       <footer className="footer"><div className="footer-inner">

@@ -1,136 +1,130 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
-import { levelFromXp, getStreak, formatDate, todayStr, XP_REWARDS, SUBJECT_ICONS } from '../lib/helpers.js'
+import { levelFromXp, getStreak, formatDate, todayStr, XP_REWARDS, ACHIEVEMENT_DEFS } from '../lib/helpers.js'
 import './Dashboard.css'
 
 export default function Dashboard({ onNavigate }) {
-  const { profile, subjects, tasks, sessions, exams, quickNotes, addXp, refresh } = useApp()
+  const { profile, subjects, tasks, sessions, exams, quickNotes, loading, refresh, addXp, unlockAchievement } = useApp()
+  const [newQuickNote, setNewQuickNote] = useState('')
+  const [editingNote, setEditingNote] = useState(null)
+  const [editText, setEditText] = useState('')
   const [quote, setQuote] = useState(null)
-  const [qnText, setQnText] = useState('')
-  const [qnEditing, setQnEditing] = useState(null)
 
   useEffect(() => {
-    supabase.from('motivational_quotes').select('*').then(({ data }) => {
-      if (data && data.length) setQuote(data[Math.floor(Math.random() * data.length)])
-    })
+    let active = true
+    supabase
+      .from('motivational_quotes')
+      .select('quote, author')
+      .order('random()')
+      .limit(1)
+      .single()
+      .then(({ data }) => { if (active && data) setQuote(data) })
+    return () => { active = false }
   }, [])
 
   const today = todayStr()
-  const levelInfo = levelFromXp(profile?.xp || 0)
-  const streak = getStreak(sessions)
-
-  const studiedToday = useMemo(() => {
-    return sessions.filter(s => s.session_date === today).reduce((sum, s) => sum + (s.duration || 0), 0)
-  }, [sessions, today])
-
-  const tasksDoneToday = useMemo(() => tasks.filter(t => t.completed && t.completed_at?.startsWith(today)).length, [tasks, today])
-
-  const todaysTasks = useMemo(() => tasks.filter(t => !t.completed && t.due_date === today).slice(0, 6), [tasks, today])
-
+  const streak = useMemo(() => getStreak(sessions), [sessions])
+  const todayTasks = useMemo(() => (tasks || []).filter(t => t.due_date === today && !t.archived), [tasks, today])
+  const todayTasksDone = todayTasks.filter(t => t.completed).length
+  const todaySessions = useMemo(() => (sessions || []).filter(s => s.session_date === today), [sessions, today])
+  const minutesToday = todaySessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
   const dailyGoal = profile?.daily_goal_minutes || 120
-  const goalPct = Math.min(100, Math.round((studiedToday / dailyGoal) * 100))
+  const goalProgress = dailyGoal > 0 ? Math.min(minutesToday / dailyGoal, 1) : 0
+  const xpInfo = levelFromXp(profile?.xp || 0)
+  const upcomingExams = useMemo(() => (exams || []).filter(e => new Date(e.exam_date) >= new Date(today)).slice(0, 4), [exams, today])
 
   const weekDays = useMemo(() => {
     const days = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i)
       const ds = d.toISOString().split('T')[0]
-      const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + (s.duration || 0), 0)
+      const mins = (sessions || []).filter(s => s.session_date === ds).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
       days.push({ date: ds, label: d.toLocaleDateString('en-US', { weekday: 'short' }), mins })
     }
     return days
   }, [sessions])
+  const maxWeekMins = Math.max(...weekDays.map(d => d.mins), 60)
 
-  const upcomingExams = useMemo(() => exams.filter(e => e.exam_date >= today).slice(0, 3), [exams, today])
-
-  const toggleTask = async (task) => {
-    const completed = !task.completed
-    await supabase.from('tasks').update({ completed, completed_at: completed ? new Date().toISOString() : null }).eq('id', task.id)
-    if (completed) {
-      await addXp(XP_REWARDS.task_complete)
-      const doneCount = tasks.filter(t => t.completed).length + 1
-      if (doneCount === 1) { /* first task achievement handled elsewhere */ }
+  const toggleTask = useCallback(async (task) => {
+    const newCompleted = !task.completed
+    await supabase.from('tasks').update({ completed: newCompleted }).eq('id', task.id)
+    if (newCompleted) {
+      const diff = task.difficulty || 'medium'
+      const xp = XP_REWARDS.task_complete + (diff === 'hard' ? XP_REWARDS.task_hard : 0)
+      await addXp(xp)
+      const doneCount = (tasks || []).filter(t => t.completed).length + 1
+      if (doneCount === 1) unlockAchievement('first_task')
+      if (doneCount >= 10) unlockAchievement('tasks_10')
+      if (doneCount >= 50) unlockAchievement('tasks_50')
     }
     refresh()
-  }
+  }, [tasks, addXp, unlockAchievement, refresh])
 
   const addQuickNote = async () => {
-    if (!qnText.trim()) return
-    if (qnEditing) {
-      await supabase.from('quick_notes').update({ content: qnText }).eq('id', qnEditing.id)
-      setQnEditing(null)
-    } else {
-      const { data: u } = await supabase.auth.getUser()
-      await supabase.from('quick_notes').insert({ user_id: u.user.id, content: qnText })
-    }
-    setQnText('')
-    refresh()
+    const text = newQuickNote.trim()
+    if (!text) return
+    const { data } = await supabase.from('quick_notes').insert({ content: text }).select().single()
+    if (data) { setNewQuickNote(''); refresh() }
+  }
+  const deleteQuickNote = async (id) => { await supabase.from('quick_notes').delete().eq('id', id); refresh() }
+  const saveEditNote = async (id) => {
+    const text = editText.trim()
+    if (!text) return
+    await supabase.from('quick_notes').update({ content: text }).eq('id', id)
+    setEditingNote(null); setEditText(''); refresh()
   }
 
-  const deleteQuickNote = async (id) => {
-    await supabase.from('quick_notes').delete().eq('id', id)
-    refresh()
-  }
+  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
 
-  const editQuickNote = (n) => { setQnEditing(n); setQnText(n.content) }
-
-  const ringR = 54, ringC = 2 * Math.PI * ringR
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  const ringR = 52, ringC = 2 * Math.PI * ringR
 
   return (
     <div className="dashboard">
-      <div className="welcome-banner">
+      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, var(--primary), var(--accent))` }}>
         <div className="welcome-text">
-          <h1>Welcome back, {profile?.username || 'Student'} 👋</h1>
-          <p>{streak > 0 ? `🔥 ${streak}-day streak — keep it up!` : 'Ready to start a new streak today?'}</p>
+          <h1>{greeting}, {profile?.username || 'Student'}! 👋</h1>
+          <p>You're on a <strong>{streak}-day</strong> streak. Keep it going!</p>
         </div>
-        <button className="btn btn-primary focus-shortcut" onClick={() => onNavigate?.('focus')}>
-          🍅 Start Focus Session
-        </button>
-      </div>
-
-      <div className="grid-4 stat-cards">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>⏱️</div>
-          <div className="stat-value">{Math.floor(studiedToday / 60)}h {studiedToday % 60}m</div>
-          <div className="stat-label">Studied Today</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'var(--success-l)', color: 'var(--success)' }}>✅</div>
-          <div className="stat-value">{tasksDoneToday}</div>
-          <div className="stat-label">Tasks Done Today</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'var(--warning-l)', color: 'var(--warning)' }}>📚</div>
-          <div className="stat-value">{subjects.length}</div>
-          <div className="stat-label">Subjects</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>⭐</div>
-          <div className="stat-value">Level {levelInfo.level}</div>
-          <div className="stat-label">{levelInfo.currentLevelXp}/{levelInfo.nextLevelXp} XP</div>
+        <div className="welcome-streak">
+          <span className="streak-flame">🔥</span>
+          <span className="streak-num">{streak}</span>
         </div>
       </div>
 
-      <div className="grid-2">
+      <div className="grid-4 dash-stats">
+        <div className="card stat-card">
+          <div className="stat-emoji">⏱️</div>
+          <div className="stat-info"><span className="stat-value">{Math.floor(minutesToday / 60)}h {minutesToday % 60}m</span><span className="stat-label">Studied today</span></div>
+        </div>
+        <div className="card stat-card">
+          <div className="stat-emoji">✅</div>
+          <div className="stat-info"><span className="stat-value">{todayTasksDone}/{todayTasks.length}</span><span className="stat-label">Tasks done</span></div>
+        </div>
+        <div className="card stat-card">
+          <div className="stat-emoji">📚</div>
+          <div className="stat-info"><span className="stat-value">{subjects?.length || 0}</span><span className="stat-label">Subjects</span></div>
+        </div>
+        <div className="card stat-card">
+          <div className="stat-emoji">⭐</div>
+          <div className="stat-info"><span className="stat-value">Level {xpInfo.level}</span><span className="stat-label">{xpInfo.currentLevelXp}/{xpInfo.nextLevelXp} XP</span></div>
+        </div>
+      </div>
+
+      <div className="grid-2 dash-main">
         <div className="card">
-          <div className="card-head">
-            <h3>Today's Tasks</h3>
-            <button className="btn btn-ghost btn-sm" onClick={() => onNavigate?.('tasks')}>View all</button>
-          </div>
-          {todaysTasks.length === 0 ? (
-            <div className="dash-empty">No tasks due today. Enjoy the breather! 🎉</div>
-          ) : (
-            <div className="dash-task-list">
-              {todaysTasks.map(t => (
+          <div className="card-head"><h3>Today's Tasks</h3><button className="btn btn-ghost btn-sm" onClick={() => onNavigate('tasks')}>View all</button></div>
+          {todayTasks.length === 0 ? <div className="dash-empty">No tasks due today. Enjoy your day! 🎉</div> : (
+            <div className="dash-tasks">
+              {todayTasks.map(t => (
                 <div key={t.id} className="dash-task">
-                  <button className={`task-check ${t.completed ? 'checked' : ''}`} onClick={() => toggleTask(t)}>
-                    {t.completed && '✓'}
+                  <button className={`task-check ${t.completed ? 'checked' : ''}`} onClick={() => toggleTask(t)} style={t.completed ? { background: 'var(--primary)', borderColor: 'var(--primary)' } : {}}>
+                    {t.completed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </button>
-                  <div className="dash-task-info">
-                    <div className="dash-task-title">{t.title}</div>
-                    {t.subject && <div className="dash-task-subject">{t.subject.icon} {t.subject.name}</div>}
-                  </div>
+                  <span className={`dash-task-title ${t.completed ? 'done' : ''}`}>{t.title}</span>
+                  {t.subject && <span className="dash-task-subject" style={{ color: t.subject.color }}>{t.subject.icon}</span>}
                 </div>
               ))}
             </div>
@@ -140,17 +134,12 @@ export default function Dashboard({ onNavigate }) {
         <div className="card goal-card">
           <div className="card-head"><h3>Daily Goal</h3></div>
           <div className="goal-ring-wrap">
-            <svg className="goal-ring" width="140" height="140" viewBox="0 0 140 140">
+            <svg width="140" height="140" viewBox="0 0 140 140" className="goal-ring">
               <circle cx="70" cy="70" r={ringR} fill="none" stroke="var(--surface-2)" strokeWidth="10" />
-              <circle cx="70" cy="70" r={ringR} fill="none" stroke="var(--primary)" strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={ringC} strokeDashoffset={ringC - (ringC * goalPct / 100)}
-                transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 0.5s ease' }} />
-              <text x="70" y="72" textAnchor="middle" dominantBaseline="middle" className="goal-ring-text">{goalPct}%</text>
+              <circle cx="70" cy="70" r={ringR} fill="none" stroke="var(--primary)" strokeWidth="10" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringC * (1 - goalProgress)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+              <text x="70" y="66" textAnchor="middle" className="goal-ring-num">{Math.round(goalProgress * 100)}%</text>
+              <text x="70" y="86" textAnchor="middle" className="goal-ring-label">{minutesToday}m / {dailyGoal}m</text>
             </svg>
-            <div className="goal-meta">
-              <div className="goal-meta-val">{Math.floor(studiedToday / 60)}h {studiedToday % 60}m</div>
-              <div className="goal-meta-label">of {Math.floor(dailyGoal / 60)}h {dailyGoal % 60}m goal</div>
-            </div>
           </div>
         </div>
       </div>
@@ -158,51 +147,51 @@ export default function Dashboard({ onNavigate }) {
       <div className="grid-2">
         <div className="card">
           <div className="card-head"><h3>Quick Notes</h3></div>
-          <div className="qn-input-row">
-            <input className="qn-input" placeholder="Jot a quick note..." value={qnText}
-              onChange={(e) => setQnText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addQuickNote()} />
-            <button className="btn btn-primary btn-sm" onClick={addQuickNote}>{qnEditing ? 'Save' : 'Add'}</button>
-            {qnEditing && <button className="btn btn-ghost btn-sm" onClick={() => { setQnEditing(null); setQnText('') }}>Cancel</button>}
+          <div className="quick-note-input">
+            <input type="text" placeholder="Jot something down..." value={newQuickNote} onChange={e => setNewQuickNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && addQuickNote()} />
+            <button className="btn btn-primary btn-sm" onClick={addQuickNote}>Add</button>
           </div>
-          <div className="qn-list">
-            {quickNotes.length === 0 ? <div className="dash-empty">No quick notes yet.</div> :
-              quickNotes.map(n => (
-                <div key={n.id} className="qn-item">
-                  <span className="qn-content">{n.content}</span>
-                  <div className="qn-actions">
-                    <button className="btn btn-ghost btn-sm" onClick={() => editQuickNote(n)}>✏️</button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => deleteQuickNote(n.id)}>🗑️</button>
-                  </div>
-                </div>
-              ))}
+          <div className="quick-notes-list">
+            {(quickNotes || []).map(n => (
+              <div key={n.id} className="quick-note-item">
+                {editingNote === n.id ? (
+                  <>
+                    <input type="text" value={editText} onChange={e => setEditText(e.target.value)} autoFocus />
+                    <button className="btn btn-primary btn-sm" onClick={() => saveEditNote(n.id)}>Save</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setEditingNote(null)}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <span className="qn-content" onClick={() => { setEditingNote(n.id); setEditText(n.content) }}>{n.content}</span>
+                    <button className="btn btn-ghost btn-sm qn-delete" onClick={() => deleteQuickNote(n.id)}>✕</button>
+                  </>
+                )}
+              </div>
+            ))}
+            {(!quickNotes || quickNotes.length === 0) && <div className="dash-empty">No quick notes yet.</div>}
           </div>
         </div>
 
         <div className="card xp-card">
-          <div className="card-head"><h3>Level Progress</h3></div>
-          <div className="xp-level-row">
-            <div className="xp-level-badge">Lv {levelInfo.level}</div>
-            <div className="xp-level-info">
-              <div className="xp-progress-track">
-                <div className="xp-progress-fill" style={{ width: `${levelInfo.progress * 100}%` }} />
-              </div>
-              <div className="xp-progress-text">{levelInfo.currentLevelXp} / {levelInfo.nextLevelXp} XP to Level {levelInfo.level + 1}</div>
-            </div>
+          <div className="card-head"><h3>XP & Level</h3><span className="level-badge" style={{ background: 'var(--primary)' }}>Lv {xpInfo.level}</span></div>
+          <div className="xp-progress-wrap">
+            <div className="xp-progress-bar"><div className="xp-progress-fill" style={{ width: `${xpInfo.progress * 100}%`, background: 'linear-gradient(90deg, var(--primary), var(--accent))' }} /></div>
+            <span className="xp-progress-text">{xpInfo.currentLevelXp} / {xpInfo.nextLevelXp} XP</span>
           </div>
+          <p className="xp-hint">{xpInfo.nextLevelXp - xpInfo.currentLevelXp} XP to level {xpInfo.level + 1}</p>
         </div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>This Week</h3></div>
         <div className="week-chart">
-          {weekDays.map(d => (
-            <div key={d.date} className="week-bar-col">
-              <div className="week-bar-wrap">
-                <div className="week-bar" style={{ height: `${Math.max(2, (d.mins / Math.max(...weekDays.map(w => w.mins), 60)) * 100)}%` }} />
+          {weekDays.map((d, i) => (
+            <div key={i} className="week-bar-col">
+              <div className="week-bar-track">
+                <div className="week-bar" style={{ height: `${(d.mins / maxWeekMins) * 100}%`, background: d.mins > 0 ? 'var(--primary)' : 'var(--border)' }} title={`${d.mins}m`} />
               </div>
-              <div className="week-bar-label">{d.label}</div>
-              <div className="week-bar-val">{d.mins}m</div>
+              <span className="week-bar-label">{d.label}</span>
+              <span className="week-bar-mins">{d.mins}m</span>
             </div>
           ))}
         </div>
@@ -210,29 +199,31 @@ export default function Dashboard({ onNavigate }) {
 
       <div className="grid-2">
         <div className="card">
-          <div className="card-head"><h3>Upcoming Exams</h3></div>
-          {upcomingExams.length === 0 ? <div className="dash-empty">No upcoming exams.</div> : (
-            <div className="exam-list">
+          <div className="card-head"><h3>Upcoming Exams</h3><button className="btn btn-ghost btn-sm" onClick={() => onNavigate('calendar')}>Calendar</button></div>
+          {upcomingExams.length === 0 ? <div className="dash-empty">No upcoming exams. 🎉</div> : (
+            <div className="dash-exams">
               {upcomingExams.map(e => (
-                <div key={e.id} className="exam-item">
-                  <div className="exam-date">{formatDate(e.exam_date)}</div>
-                  <div className="exam-info">
-                    <div className="exam-title">{e.title}</div>
-                    {e.subject && <div className="exam-subject">{e.subject.icon} {e.subject.name}</div>}
-                  </div>
+                <div key={e.id} className="dash-exam-item">
+                  <span className="exam-dot" style={{ background: e.subject?.color || 'var(--primary)' }} />
+                  <div className="exam-info"><span className="exam-title">{e.title}</span><span className="exam-date">{formatDate(e.exam_date)}</span></div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="card quote-card">
-          <div className="card-head"><h3>Daily Motivation</h3></div>
+        <div className="card quote-card" style={{ background: 'linear-gradient(135deg, var(--primary-l), var(--surface))' }}>
+          <div className="card-head"><h3>💡 Daily Motivation</h3></div>
           {quote ? (
-            <blockquote className="quote-text">"{quote.text || quote.quote}"</blockquote>
-          ) : <div className="dash-empty">Stay focused and keep going 💪</div>}
+            <div className="quote-content"><p className="quote-text">"{quote.quote}"</p><span className="quote-author">— {quote.author}</span></div>
+          ) : <div className="dash-empty">Loading inspiration...</div>}
         </div>
       </div>
+
+      <button className="btn btn-primary focus-shortcut" onClick={() => onNavigate('focus')}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3" /></svg>
+        Start a Focus Session
+      </button>
     </div>
   )
 }

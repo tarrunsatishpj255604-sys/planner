@@ -36,8 +36,7 @@
 .feature-card p { font-size: 14px; color: #5a6378; line-height: 1.6; }
 .cta-section { padding: 80px 24px; }
 .cta-inner { max-width: 600px; margin: 0 auto; text-align: center; background: #fff; border: 1px solid #e2e6ef; border-radius: 20px; padding: 56px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.cta-inner h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
-.cta-inner p { font-size: 16px; color: #5a6378; margin-bottom: 28px; }
+.cta-inner h2 { font-size: 28px; font-weight: 800; margin-bottom: 28px; }
 .footer { padding: 40px 24px; border-top: 1px solid #e2e6ef; }
 .footer-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
 .footer-inner p { color: #9ca3b8; font-size: 14px; }

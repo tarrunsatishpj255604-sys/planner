@@ -41,7 +41,6 @@ export default function Shell({ session }) {
   const [route, setRoute] = useState('dashboard')
   const [subjectId, setSubjectId] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
   const theme = THEMES[settings?.theme] || THEMES.default
   const primary = settings?.primary_color || '#4f7cff'
   const accent = settings?.accent_color || '#ec4899'

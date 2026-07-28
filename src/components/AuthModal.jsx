@@ -14,13 +14,8 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     try {
-      if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
-        if (error) throw error; if (data?.user) onClose()
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        if (error) throw error; onClose()
-      }
+      if (mode === 'signup') { const { data, error } = await supabase.auth.signUp({ email: email.trim(), password }); if (error) throw error; if (data?.user) onClose() }
+      else { const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password }); if (error) throw error; onClose() }
     } catch (err) {
       const msg = err?.message || 'Something went wrong.'
       if (msg.includes('Failed to fetch') || msg.includes('fetch')) setError('Could not reach the server. Please check your connection.')

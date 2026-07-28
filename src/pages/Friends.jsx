@@ -1,21 +1,27 @@
 import './StubPages.css'
 
 export default function Friends() {
+  const features = [
+    { icon: '👥', title: 'Add Friends', desc: 'Connect with classmates and study buddies' },
+    { icon: '🏆', title: 'Leaderboards', desc: 'Compete with friends and climb the ranks' },
+    { icon: '📚', title: 'Group Sessions', desc: 'Study together in shared focus rooms' },
+    { icon: '📝', title: 'Share Notes', desc: 'Exchange notes and flashcards with friends' },
+  ]
   return (
     <div className="stub-page">
-      <div className="page-toolbar">
-        <div><h2>Friends</h2><p className="page-desc">Connect and study with your peers.</p></div>
+      <div className="stub-hero">
+        <div className="stub-emoji">👥</div>
+        <h2>Friends</h2>
+        <p className="stub-tagline">Coming soon</p>
+        <p className="stub-desc">We're building social features to help you study with friends and stay motivated together.</p>
       </div>
-      <div className="stub-card">
-        <div className="stub-icon">👥</div>
-        <h3>Coming Soon</h3>
-        <p>We're building social features to help you study together.</p>
-        <div className="stub-features">
-          <div className="stub-feature"><span className="sf-icon">🤝</span><div><strong>Add Friends</strong><p>Connect with classmates and study buddies.</p></div></div>
-          <div className="stub-feature"><span className="sf-icon">🏆</span><div><strong>Leaderboards</strong><p>Compete with friends on XP and streaks.</p></div></div>
-          <div className="stub-feature"><span className="sf-icon">📚</span><div><strong>Group Sessions</strong><p>Join shared focus sessions and study rooms.</p></div></div>
-          <div className="stub-feature"><span className="sf-icon">📤</span><div><strong>Share Notes</strong><p>Exchange notes and flashcards with friends.</p></div></div>
-        </div>
+      <div className="grid-2 stub-features">
+        {features.map(f => (
+          <div key={f.title} className="card stub-feature">
+            <span className="stub-feature-icon">{f.icon}</span>
+            <div><h3>{f.title}</h3><p>{f.desc}</p></div>
+          </div>
+        ))}
       </div>
     </div>
   )
