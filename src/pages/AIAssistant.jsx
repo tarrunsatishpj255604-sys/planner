@@ -1,31 +1,68 @@
 import { useState, useRef, useEffect } from 'react'
 import './StubPages.css'
 
+const SUGGESTIONS = [
+  'Help me plan my study schedule',
+  'What should I focus on?',
+  'Create a study plan for exams',
+]
+
 export default function AIAssistant() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [chips] = useState(['Help me plan my study schedule', 'What should I focus on?', 'Create a study plan for exams'])
-  const listRef = useRef(null)
+  const scrollRef = useRef(null)
 
-  useEffect(() => { if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight }, [messages])
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages])
 
-  const send = (text) => {
+  const sendMessage = (text) => {
     if (!text.trim()) return
-    setMessages(prev => [...prev, { role: 'user', text }, { role: 'assistant', text: 'This feature is coming soon! I\'ll be able to help you with study planning, exam prep, and more.' }])
+    const userMsg = { role: 'user', text: text.trim() }
+    setMessages(prev => [...prev, userMsg])
     setInput('')
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'This feature is coming soon! I\'ll be able to help you with study planning, exam prep, and more.' }])
+    }, 500)
   }
 
   return (
-    <div className="ai-page">
-      <div className="page-toolbar"><div><h2>AI Assistant</h2><p className="page-desc">Your personal study coach</p></div></div>
-      <div className="ai-chat" ref={listRef}>
-        {messages.length === 0 ? (
-          <div className="ai-welcome"><span className="stub-icon-big">🤖</span><h3>Ask me anything about your studies</h3><div className="ai-chips">{chips.map((c, i) => <button key={i} className="ai-chip" onClick={() => send(c)}>{c}</button>)}</div></div>
-        ) : (
-          <div className="ai-messages">{messages.map((m, i) => <div key={i} className={`ai-msg ${m.role}`}><span className="ai-msg-text">{m.text}</span></div>)}</div>
-        )}
+    <div className="stub-page ai-page">
+      <div className="page-toolbar">
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>AI Assistant</h2>
+          <p className="page-desc">Your personal study companion — powered by AI.</p>
+        </div>
       </div>
-      <div className="ai-input-row"><input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." onKeyDown={e => e.key === 'Enter' && send(input)} /><button className="btn btn-primary" onClick={() => send(input)}>Send</button></div>
+
+      <div className="ai-chat">
+        <div className="ai-messages" ref={scrollRef}>
+          {messages.length === 0 ? (
+            <div className="ai-welcome">
+              <span className="ai-welcome-icon">🤖</span>
+              <h3>Hi! I'm your AI Study Assistant</h3>
+              <p>Ask me anything about your studies, or try one of these suggestions:</p>
+              <div className="ai-suggestions">
+                {SUGGESTIONS.map((s, i) => (
+                  <button key={i} className="ai-suggestion-chip" onClick={() => sendMessage(s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((m, i) => (
+              <div key={i} className={`ai-message ${m.role}`}>
+                <span className="ai-message-icon">{m.role === 'user' ? '🧑' : '🤖'}</span>
+                <div className="ai-message-bubble"><p>{m.text}</p></div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="ai-input-area">
+          <input type="text" placeholder="Type your message..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage(input)} className="ai-input" />
+          <button className="btn btn-primary" onClick={() => sendMessage(input)}>Send</button>
+        </div>
+      </div>
     </div>
   )
 }

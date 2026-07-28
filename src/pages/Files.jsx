@@ -1,50 +1,55 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
 import './StubPages.css'
 
+const FILE_ICONS = {
+  pdf: '📄', doc: '📝', docx: '📝', txt: '📄', img: '🖼️', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', webp: '🖼️',
+  zip: '🗜️', rar: '🗜️', mp3: '🎵', wav: '🎵', mp4: '🎬', mov: '🎬', ppt: '📊', pptx: '📊', xls: '📈', xlsx: '📈',
+  default: '📎',
+}
+
+function getFileIcon(file) {
+  const ext = (file.file_name || '').split('.').pop()?.toLowerCase() || ''
+  const type = (file.file_type || '').split('/')[0]
+  if (FILE_ICONS[ext]) return FILE_ICONS[ext]
+  if (type === 'image') return '🖼️'
+  if (type === 'video') return '🎬'
+  if (type === 'audio') return '🎵'
+  return FILE_ICONS.default
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function Files() {
-  const { files, subjects, user, refresh, unlockAchievement } = useApp()
-  const fileRef = useRef(null)
+  const { files, subjects, loading, refresh, unlockAchievement } = useApp()
+  const fileInputRef = useRef(null)
   const [uploading, setUploading] = useState(false)
-  const [assignSubject, setAssignSubject] = useState({})
+  const [subjectSelects, setSubjectSelects] = useState({})
 
-  const formatSize = (bytes) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  const getFileIcon = (type) => {
-    if (type?.includes('pdf')) return '📄'
-    if (type?.includes('image')) return '🖼️'
-    if (type?.includes('word') || type?.includes('doc')) return '📝'
-    if (type?.includes('zip') || type?.includes('rar')) return '🗜️'
-    if (type?.includes('video')) return '🎬'
-    if (type?.includes('audio')) return '🎵'
-    if (type?.includes('text')) return '📃'
-    if (type?.includes('spreadsheet') || type?.includes('excel')) return '📊'
-    if (type?.includes('presentation') || type?.includes('powerpoint')) return '📽️'
-    return '📎'
-  }
-
-  const handleUpload = async (e) => {
-    const selectedFiles = Array.from(e.target.files)
-    if (selectedFiles.length === 0) return
+  const uploadFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
     setUploading(true)
-    for (const file of selectedFiles) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
       const path = `${user.id}/${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from('user_files').upload(path, file)
-      if (uploadError) continue
-      await supabase.from('user_files').insert({ file_name: file.name, file_path: path, file_size: file.size, file_type: file.type, subject_id: null }).select().single()
-      unlockAchievement('files_1')
+      const { error: uploadErr } = await supabase.storage.from('user_files').upload(path, file)
+      if (uploadErr) throw uploadErr
+      await supabase.from('user_files').insert({ file_name: file.name, file_path: path, file_size: file.size, file_type: file.type })
+      await unlockAchievement('files_1')
+      refresh()
+    } catch (err) {
+      console.error('Upload error:', err)
     }
-    setUploading(false); refresh()
-    if (fileRef.current) fileRef.current.value = ''
-  }
-
-  const assignFile = async (fileId, subjectId) => {
-    await supabase.from('user_files').update({ subject_id: subjectId || null }).eq('id', fileId); refresh()
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const downloadFile = async (file) => {
@@ -53,36 +58,58 @@ export default function Files() {
   }
 
   const deleteFile = async (file) => {
-    await supabase.storage.from('user_files').remove([file.file_path])
-    await supabase.from('user_files').delete().eq('id', file.id); refresh()
+    try {
+      await supabase.storage.from('user_files').remove([file.file_path])
+    } catch (e) { /* may already be gone */ }
+    await supabase.from('user_files').delete().eq('id', file.id)
+    refresh()
   }
 
+  const updateFileSubject = async (fileId, subjId) => {
+    setSubjectSelects(prev => ({ ...prev, [fileId]: subjId }))
+    await supabase.from('user_files').update({ subject_id: subjId || null }).eq('id', fileId)
+    refresh()
+  }
+
+  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} /></div>
+
   return (
-    <div className="files-page">
+    <div className="stub-page files-page">
       <div className="page-toolbar">
-        <div><h2>Files</h2><p className="page-desc">Upload and organize your study materials</p></div>
-        <button className="btn btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? 'Uploading...' : '+ Upload File'}</button>
-        <input ref={fileRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Files</h2>
+          <p className="page-desc">Upload and organize your study materials.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={uploadFile} />
+          <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+            {uploading ? <><span className="spinner" /> Uploading...</> : '⬆ Upload File'}
+          </button>
+        </div>
       </div>
 
       {files.length === 0 ? (
-        <div className="empty-state"><div className="empty-icon" style={{ background: 'var(--primary-l)', fontSize: 28 }}>📁</div><h3>No files yet</h3><p>Upload your study materials to get started.</p><button className="btn btn-primary" onClick={() => fileRef.current?.click()}>Upload File</button></div>
+        <div className="empty-state">
+          <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>📁</div>
+          <h3>No files uploaded</h3>
+          <p>Upload your study materials to keep them organized and accessible.</p>
+        </div>
       ) : (
         <div className="files-list">
-          {files.map(file => (
-            <div key={file.id} className="file-item">
-              <span className="file-icon">{getFileIcon(file.file_type)}</span>
+          {files.map(f => (
+            <div key={f.id} className="card file-row">
+              <span className="file-icon">{getFileIcon(f)}</span>
               <div className="file-info">
-                <span className="file-name">{file.file_name}</span>
-                <span className="file-meta">{formatSize(file.file_size || 0)}</span>
+                <span className="file-name">{f.file_name}</span>
+                <span className="file-meta">{formatSize(f.file_size)}{f.file_type ? ` · ${f.file_type}` : ''}</span>
               </div>
-              <select className="file-subject-select" value={file.subject_id || ''} onChange={e => assignFile(file.id, e.target.value)}>
+              <select className="file-subject-select" value={subjectSelects[f.id] ?? f.subject_id ?? ''} onChange={e => updateFileSubject(f.id, e.target.value)}>
                 <option value="">No subject</option>
                 {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <div className="file-actions">
-                <button className="btn btn-ghost btn-sm" onClick={() => downloadFile(file)}>Download</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => deleteFile(file)}>Delete</button>
+                <button className="btn btn-outline btn-sm" onClick={() => downloadFile(f)}>⬇ Download</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => deleteFile(f)}>🗑️ Delete</button>
               </div>
             </div>
           ))}

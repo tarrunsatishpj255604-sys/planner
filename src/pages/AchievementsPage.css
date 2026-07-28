@@ -1,13 +1,17 @@
-.ach-page { display: flex; flex-direction: column; gap: 16px; }
-.ach-progress-bar-wrap { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-bottom: 8px; }
-.ach-progress-bar { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
-.ach-progress-text { font-size: 14px; font-weight: 600; color: var(--text-2); }
-.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.ach-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 12px; transition: all var(--transition); }
-.ach-card.unlocked { border-color: var(--primary); background: var(--primary-l); }
-.ach-card.locked { opacity: 0.7; }
-.ach-icon { font-size: 28px; flex-shrink: 0; }
-.ach-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.ach-title { font-size: 14px; font-weight: 700; }
-.ach-desc { font-size: 12px; color: var(--text-2); }
-.ach-check { color: var(--success); font-weight: 700; font-size: 18px; }
+.achievements-page { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
+.ach-progress-card { display: flex; flex-direction: column; gap: 12px; }
+.ach-progress-info { display: flex; align-items: center; justify-content: space-between; }
+.ach-progress-info h3 { font-size: 18px; font-weight: 800; }
+.ach-progress-info span { font-size: 14px; font-weight: 600; color: var(--text-2); }
+.ach-progress-bar { height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.ach-progress-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.ach-card { padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; transition: all var(--transition); animation: slideUp 0.15s ease; }
+.ach-card.unlocked { border-color: var(--primary); border-width: 2px; }
+.ach-card.locked { opacity: 0.45; filter: grayscale(0.8); }
+.ach-card-icon { font-size: 32px; }
+.ach-card-title { font-size: 14px; font-weight: 700; }
+.ach-card-desc { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+.ach-card-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-top: 4px; }
+.unlocked-badge { background: var(--success-l); color: var(--success); }
+.locked-badge { background: var(--surface-2); color: var(--text-3); }

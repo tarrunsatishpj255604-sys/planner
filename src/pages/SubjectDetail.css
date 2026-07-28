@@ -1,29 +1,43 @@
-.sd-page { display: flex; flex-direction: column; gap: 16px; }
-.back-btn { align-self: flex-start; }
-.sd-header { border-radius: var(--radius); padding: 28px; display: flex; align-items: center; gap: 16px; color: #fff; }
-.sd-icon { font-size: 40px; }
-.sd-header-info { flex: 1; }
-.sd-header-info h2 { font-size: 24px; font-weight: 800; }
-.sd-header-info span { font-size: 14px; opacity: 0.85; }
-.sd-quick-stats { display: flex; gap: 16px; font-size: 14px; }
-.sd-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
-.sd-tab { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); white-space: nowrap; transition: all var(--transition); }
+.subject-detail { animation: fadeIn 0.3s ease; }
+.sd-header { border-radius: var(--radius); padding: 24px 28px; color: #fff; display: flex; flex-direction: column; gap: 16px; }
+.sd-back { align-self: flex-start; }
+.sd-header-info { display: flex; align-items: center; gap: 16px; }
+.sd-header-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,0.2); }
+.sd-header-info h2 { font-size: 22px; font-weight: 800; }
+.sd-header-stats { display: flex; gap: 16px; margin-top: 4px; font-size: 13px; opacity: 0.9; }
+.sd-tabs { display: flex; gap: 4px; overflow-x: auto; padding: 4px 0; margin-bottom: 4px; }
+.sd-tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; transition: all var(--transition); }
 .sd-tab:hover { background: var(--surface-2); }
-.sd-ring-wrap { display: flex; align-items: center; justify-content: center; position: relative; margin: 12px 0; }
-.sd-ring-pct { position: absolute; font-size: 20px; font-weight: 800; }
-.sd-big-stat { font-size: 32px; font-weight: 800; }
-.sd-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.sd-add-row input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background: var(--surface); color: var(--text); }
-.sd-add-row input:focus { border-color: var(--primary); }
-.sd-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.sd-item:last-child { border-bottom: none; }
-.sd-preview { font-size: 13px; color: var(--text-2); margin-top: 2px; }
-.sd-del { width: 24px; height: 24px; border-radius: 50%; color: var(--text-3); font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.sd-del:hover { color: var(--error); }
-.sd-fc-form { display: flex; gap: 8px; margin-bottom: 16px; }
-.sd-fc-form input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background: var(--surface); color: var(--text); }
-.sd-fc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.sd-fc-card { background: var(--surface-2); border-radius: var(--radius-sm); padding: 14px; display: flex; justify-content: space-between; align-items: flex-start; }
-.sd-fc-front { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.sd-tab.active { background: var(--primary); color: #fff; }
+.sd-content { margin-top: 8px; }
+.sd-goal-ring { position: relative; display: flex; align-items: center; justify-content: center; padding: 12px 0; }
+.sd-goal-center { position: absolute; display: flex; flex-direction: column; align-items: center; }
+.sd-goal-pct { font-size: 26px; font-weight: 800; }
+.sd-goal-detail { font-size: 12px; color: var(--text-2); }
+.sd-stat-list { display: flex; flex-direction: column; gap: 12px; }
+.sd-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sd-stat-row:last-child { border-bottom: none; }
+.sd-stat-row span { font-size: 14px; color: var(--text-2); }
+.sd-stat-row strong { font-size: 15px; }
+.sd-form-inline { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.sd-form-inline input, .sd-form-inline textarea { flex: 1; min-width: 120px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--text); outline: none; }
+.sd-form-inline input:focus, .sd-form-inline textarea:focus { border-color: var(--primary); }
+.sd-list { display: flex; flex-direction: column; gap: 8px; }
+.sd-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.sd-list-item div { flex: 1; display: flex; flex-direction: column; }
+.sd-list-item strong { font-size: 14px; }
+.sd-list-desc { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.sd-list-sub { font-size: 12px; color: var(--text-3); }
+.sd-task-done { text-decoration: line-through; color: var(--text-3); }
+.sd-del-btn { color: var(--text-3); font-size: 14px; padding: 4px 8px; border-radius: 6px; transition: all var(--transition); flex-shrink: 0; }
+.sd-del-btn:hover { color: var(--error); background: var(--error-l); }
+.sd-fc-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.sd-fc-form input { flex: 1; min-width: 120px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--text); outline: none; }
+.sd-fc-form input:focus { border-color: var(--primary); }
+.sd-fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.sd-fc-card { position: relative; padding: 16px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.sd-fc-front { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
 .sd-fc-back { font-size: 13px; color: var(--text-2); }
-@media (max-width: 768px) { .sd-fc-grid { grid-template-columns: 1fr; } .sd-quick-stats { flex-direction: column; gap: 4px; } }
+.sd-fc-card .sd-del-btn { position: absolute; top: 8px; right: 8px; }
+.sd-total-time { font-size: 36px; font-weight: 800; text-align: center; }
+.sd-total-label { text-align: center; font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
