@@ -1,83 +1,59 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useApp } from '../lib/AppContext.jsx';
-import { supabase } from '../lib/supabaseClient.js';
-import { formatDate } from '../lib/helpers.js';
-import './NotesPage.css';
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useApp } from '../lib/AppContext.jsx'
+import { supabase } from '../lib/supabaseClient.js'
+import { formatDate } from '../lib/helpers.js'
+import './NotesPage.css'
 
-const FOLDERS = ['All', 'General', 'Important', 'Archive'];
+const FOLDERS = ['all', 'personal', 'study', 'ideas', 'archive']
 
 export default function Notes() {
-  const { profile, subjects, notes, refresh } = useApp();
-  const [search, setSearch] = useState('');
-  const [folder, setFolder] = useState('All');
-  const [activeId, setActiveId] = useState(null);
-  const [draft, setDraft] = useState({ title: '', content: '', subject_id: '', folder: 'General', tags: '', pinned: false, favorite: false });
-  const saveTimer = useRef(null);
+  const { user, notes, subjects, refresh } = useApp()
+  const [search, setSearch] = useState('')
+  const [folder, setFolder] = useState('all')
+  const [activeId, setActiveId] = useState(null)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [noteFolder, setNoteFolder] = useState('personal')
+  const [subjectId, setSubjectId] = useState('')
+  const [tags, setTags] = useState('')
+  const saveTimer = useRef(null)
+
+  const active = notes.find(n => n.id === activeId)
 
   const filtered = useMemo(() => {
-    return (notes || [])
-      .filter(n => {
-        if (folder !== 'All' && (n.folder || 'General') !== folder) return false;
-        if (search && !((n.title || '') + (n.content || '')).toLowerCase().includes(search.toLowerCase())) return false;
-        return true;
-      })
-      .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.created_at || '').localeCompare(a.created_at || ''));
-  }, [notes, folder, search]);
-
-  const active = useMemo(() => (notes || []).find(n => n.id === activeId), [notes, activeId]);
+    return notes.filter(n => {
+      if (folder !== 'all' && n.folder !== folder) return false
+      if (search) { const q = search.toLowerCase(); return (n.title || '').toLowerCase().includes(q) || (n.content || '').toLowerCase().includes(q) }
+      return true
+    }).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.updated_at) - new Date(a.updated_at))
+  }, [notes, folder, search])
 
   useEffect(() => {
     if (active) {
-      setDraft({ title: active.title || '', content: active.content || '', subject_id: active.subject_id || '', folder: active.folder || 'General', tags: (active.tags || []).join(', '), pinned: !!active.pinned, favorite: !!active.favorite });
-    } else {
-      setDraft({ title: '', content: '', subject_id: '', folder: 'General', tags: '', pinned: false, favorite: false });
+      setTitle(active.title || ''); setContent(active.content || ''); setNoteFolder(active.folder || 'personal')
+      setSubjectId(active.subject_id || ''); setTags((active.tags || []).join(', '))
     }
-  }, [activeId, active]);
+  }, [activeId, active?.updated_at])
 
-  const save = useCallback(async (id, data) => {
-    try {
-      const payload = {
-        ...data,
-        tags: typeof data.tags === 'string' ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : data.tags,
-      };
-      if (id) {
-        await supabase.from('notes').update(payload).eq('id', id);
-      } else {
-        const { data: created } = await supabase.from('notes').insert({ ...payload, user_id: profile?.id, created_at: new Date().toISOString() }).select();
-        if (created && created[0]) setActiveId(created[0].id);
-      }
-      refresh();
-    } catch (e) { console.error(e); }
-  }, [profile, refresh]);
+  useEffect(() => {
+    if (!activeId) return
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      const tagArr = tags.split(',').map(t => t.trim()).filter(Boolean)
+      await supabase.from('notes').update({ title, content, folder: noteFolder, subject_id: subjectId || null, tags: tagArr, updated_at: new Date().toISOString() }).eq('id', activeId)
+      refresh()
+    }, 1500)
+    return () => saveTimer.current && clearTimeout(saveTimer.current)
+  }, [title, content, noteFolder, subjectId, tags, activeId])
 
-  const debouncedSave = useCallback((id, data) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => save(id, data), 1500);
-  }, [save]);
+  const newNote = async () => {
+    const { data } = await supabase.from('notes').insert({ user_id: user.id, title: 'Untitled', content: '', folder: 'personal', tags: [] }).select().single()
+    if (data) { setActiveId(data.id); setTitle('Untitled'); setContent(''); setNoteFolder('personal'); setSubjectId(''); setTags(''); refresh() }
+  }
 
-  const update = (field, value) => {
-    const next = { ...draft, [field]: value };
-    setDraft(next);
-    if (activeId || next.title || next.content) debouncedSave(activeId, next);
-  };
-
-  const newNote = () => { setActiveId(null); setDraft({ title: '', content: '', subject_id: '', folder: 'General', tags: '', pinned: false, favorite: false }); };
-
-  const togglePin = async () => {
-    if (!activeId) return;
-    await supabase.from('notes').update({ pinned: !draft.pinned }).eq('id', activeId);
-    setDraft(d => ({ ...d, pinned: !d.pinned })); refresh();
-  };
-  const toggleFav = async () => {
-    if (!activeId) return;
-    await supabase.from('notes').update({ favorite: !draft.favorite }).eq('id', activeId);
-    setDraft(d => ({ ...d, favorite: !d.favorite })); refresh();
-  };
-  const del = async () => {
-    if (!activeId || !confirm('Delete this note?')) return;
-    await supabase.from('notes').delete().eq('id', activeId);
-    setActiveId(null); refresh();
-  };
+  const togglePin = async (n) => { await supabase.from('notes').update({ pinned: !n.pinned }).eq('id', n.id); refresh() }
+  const toggleFav = async (n) => { await supabase.from('notes').update({ favorite: !n.favorite }).eq('id', n.id); refresh() }
+  const deleteNote = async (n) => { if (!confirm('Delete this note?')) return; await supabase.from('notes').delete().eq('id', n.id); if (activeId === n.id) setActiveId(null); refresh() }
 
   return (
     <div className="notes-page">
@@ -85,50 +61,67 @@ export default function Notes() {
         <div className="notes-search">
           <input type="text" placeholder="🔍 Search notes..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="folder-filters">
-          {FOLDERS.map(f => (
-            <button key={f} className={`folder-chip ${folder === f ? 'active' : ''}`} onClick={() => setFolder(f)}>{f}</button>
+        <div className="notes-folders">
+          {FOLDERS.map(f => <button key={f} className={`folder-chip ${folder === f ? 'active' : ''}`} onClick={() => setFolder(f)}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>)}
+        </div>
+        <button className="btn btn-primary notes-new" onClick={newNote}>+ New Note</button>
+        <div className="notes-list">
+          {filtered.length === 0 ? <p className="dash-empty">No notes found.</p> : filtered.map(n => (
+            <div key={n.id} className={`note-item ${activeId === n.id ? 'active' : ''}`} onClick={() => setActiveId(n.id)}>
+              <div className="note-item-top">
+                {n.pinned && <span className="note-pin">📌</span>}
+                <span className="note-item-title">{n.title || 'Untitled'}</span>
+                {n.favorite && <span className="note-fav">⭐</span>}
+              </div>
+              <span className="note-item-preview">{(n.content || '').slice(0, 60) || 'No content'}</span>
+              <span className="note-item-date">{formatDate(n.updated_at)}</span>
+            </div>
           ))}
         </div>
-        <button className="btn btn-primary btn-sm new-note-btn" onClick={newNote}>+ New Note</button>
-        <ul className="note-list">
-          {filtered.length === 0 && <li className="empty-state"><p>No notes</p></li>}
-          {filtered.map(n => (
-            <li key={n.id} className={`note-item ${activeId === n.id ? 'active' : ''}`} onClick={() => setActiveId(n.id)}>
-              {n.pinned && <span className="pin">📌</span>}
-              <div className="note-title">{n.title || 'Untitled'}</div>
-              <div className="note-preview">{(n.content || '').slice(0, 50)}</div>
-            </li>
-          ))}
-        </ul>
       </div>
 
       <div className="notes-editor">
-        {active || (!activeId && (draft.title || draft.content)) ? (
+        {active ? (
           <>
-            <div className="editor-toolbar">
-              <input className="editor-title" type="text" value={draft.title} onChange={e => update('title', e.target.value)} placeholder="Note title" />
-              <button className="btn btn-ghost btn-sm" onClick={togglePin}>{draft.pinned ? '📌' : '📍'}</button>
-              <button className="btn btn-ghost btn-sm" onClick={toggleFav}>{draft.favorite ? '⭐' : '☆'}</button>
-              <button className="btn btn-ghost btn-sm" onClick={del}>🗑</button>
+            <div className="notes-editor-toolbar">
+              <div className="form-row" style={{ flex: 1 }}>
+                <div className="form-field">
+                  <label>Folder</label>
+                  <select value={noteFolder} onChange={e => setNoteFolder(e.target.value)}>
+                    {FOLDERS.filter(f => f !== 'all').map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Subject</label>
+                  <select value={subjectId} onChange={e => setSubjectId(e.target.value)}>
+                    <option value="">No subject</option>
+                    {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Tags (comma separated)</label>
+                  <input type="text" placeholder="tag1, tag2" value={tags} onChange={e => setTags(e.target.value)} />
+                </div>
+              </div>
+              <div className="notes-editor-actions">
+                <button className="btn btn-sm btn-ghost" onClick={() => togglePin(active)}>{active.pinned ? '📌 Unpin' : '📌 Pin'}</button>
+                <button className="btn btn-sm btn-ghost" onClick={() => toggleFav(active)}>{active.favorite ? '⭐ Unstar' : '☆ Star'}</button>
+                <button className="btn btn-sm btn-ghost" onClick={() => deleteNote(active)}>🗑️ Delete</button>
+              </div>
             </div>
-            <div className="editor-meta">
-              <select value={draft.folder} onChange={e => update('folder', e.target.value)}>
-                {FOLDERS.filter(f => f !== 'All').map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-              <select value={draft.subject_id} onChange={e => update('subject_id', e.target.value)}>
-                <option value="">No subject</option>
-                {(subjects || []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <input type="text" placeholder="tags (comma separated)" value={draft.tags} onChange={e => update('tags', e.target.value)} />
-            </div>
-            <textarea className="editor-content" value={draft.content} onChange={e => update('content', e.target.value)} placeholder="Start writing..." />
-            <div className="editor-footer">Auto-saved</div>
+            <input className="notes-title-input" placeholder="Note title..." value={title} onChange={e => setTitle(e.target.value)} />
+            <textarea className="notes-content" placeholder="Start writing..." value={content} onChange={e => setContent(e.target.value)} />
+            <div className="notes-save-indicator">Auto-saved</div>
           </>
         ) : (
-          <div className="empty-state"><div className="empty-icon">📝</div><p>Select or create a note</p></div>
+          <div className="empty-state">
+            <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>📝</div>
+            <h3>No note selected</h3>
+            <p>Select a note from the list or create a new one.</p>
+            <button className="btn btn-primary" onClick={newNote}>+ New Note</button>
+          </div>
         )}
       </div>
     </div>
-  );
+  )
 }

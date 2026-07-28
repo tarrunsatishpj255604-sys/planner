@@ -1,19 +1,20 @@
-.subject-list-page { display: flex; flex-direction: column; gap: 20px; }
-
+.subject-list-page { display: flex; flex-direction: column; gap: 0; }
+.subject-grid { margin-top: 8px; }
+.subject-card { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--primary); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all var(--transition); display: flex; flex-direction: column; gap: 12px; animation: slideUp 0.25s ease; }
+.subject-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.sc-top { display: flex; align-items: center; justify-content: space-between; }
+.sc-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.sc-delete { font-size: 16px; padding: 4px 8px; border-radius: 6px; opacity: 0.5; transition: all var(--transition); }
+.sc-delete:hover { opacity: 1; background: var(--error-l); }
+.sc-name { font-size: 18px; font-weight: 700; }
+.sc-grade { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.sc-stats { display: flex; gap: 14px; }
+.sc-stat { font-size: 13px; color: var(--text-2); font-weight: 500; }
+.sc-progress { display: flex; flex-direction: column; gap: 4px; }
+.sc-progress-bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.sc-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.sc-progress-label { font-size: 11px; color: var(--text-3); font-weight: 600; }
 .icon-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-.icon-opt { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--bg-3, #e5e7eb); background: var(--bg-1, #fff); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.icon-opt.active { border-color: var(--primary, #6366f1); }
-
-.subject-card { overflow: hidden; padding: 0; cursor: pointer; transition: transform .15s, box-shadow .15s; }
-.subject-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-.subject-card-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; color: #fff; }
-.subject-icon { font-size: 2rem; }
-.subject-card-head .close-btn { color: #fff; background: rgba(0,0,0,0.2); }
-.subject-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
-.subject-card-body h3 { margin: 0; }
-.subject-grade { font-size: 0.82rem; opacity: 0.7; }
-.subject-time { font-size: 0.85rem; opacity: 0.8; }
-.subject-progress { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.progress-bar { flex: 1; height: 8px; background: var(--bg-3, #e5e7eb); border-radius: 999px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 999px; transition: width .4s; }
-.progress-text { font-size: 0.75rem; opacity: 0.7; white-space: nowrap; }
+.icon-option { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--surface-2); transition: all var(--transition); border: 2px solid transparent; }
+.icon-option:hover { background: var(--primary-l); }
+.icon-option.selected { border-color: var(--primary); background: var(--primary-l); }
