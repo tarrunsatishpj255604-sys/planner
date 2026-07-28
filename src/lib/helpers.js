@@ -184,7 +184,7 @@ export const ACHIEVEMENT_DEFS = [
   { key: 'quarter_done', title: 'Quarter Done', desc: 'Unlock 40 achievements', icon: '📊' },
   { key: 'getting_started_ach', title: 'Achievement Hunter', desc: 'Unlock 10 achievements', icon: '🔍' },
   { key: 'collector', title: 'Collector', desc: 'Unlock 25 achievements', icon: '📦' },
-  { key: 'enthusiast', title: 'Enthusiast', desc: 'Unlock 50 achievements', icon: ' enthusiasm' },
+  { key: 'enthusiast', title: 'Enthusiast', desc: 'Unlock 50 achievements', icon: '🏆' },
 ]
 export function formatDate(dateStr) {
   if (!dateStr) return ''

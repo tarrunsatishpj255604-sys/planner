@@ -53,7 +53,7 @@ export default function Landing({ onSignIn, onSignUp }) {
       </div></section>
       <footer className="footer"><div className="footer-inner">
         <div className="brand" style={{ fontSize: 15 }}><span className="brand-icon" style={{ width: 28, height: 28 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg></span><span>StudySpace</span></div>
-        <p>Plan smarter. Study better.</p>
+        <p>Made by <strong>Tarrun</strong> · SSVM World School · Copyrights Reserved 2026</p>
       </div></footer>
     </div>
   )

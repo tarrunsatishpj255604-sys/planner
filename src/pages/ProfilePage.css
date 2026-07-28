@@ -1,22 +1,23 @@
-.profile-page { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
-.prof-loading { display: flex; align-items: center; justify-content: center; padding: 80px; }
-.prof-banner { display: flex; align-items: center; justify-content: space-between; padding: 28px 32px; border-radius: var(--radius); color: #fff; box-shadow: var(--shadow-md); }
-.prof-banner-main { display: flex; align-items: center; gap: 18px; }
-.prof-avatar { width: 72px; height: 72px; border-radius: 18px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 40px; }
-.prof-info h1 { font-size: 24px; font-weight: 800; }
-.prof-level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.25); font-size: 13px; font-weight: 700; margin-top: 4px; }
-.avatar-picker { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
-.avatar-swatch { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 22px; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; background: var(--surface-2); transition: all var(--transition); }
-.avatar-swatch:hover { background: var(--primary-l); }
-.avatar-swatch.selected { border-color: var(--primary); background: var(--primary-l); }
-.prof-slider { width: 100%; accent-color: var(--primary); }
-.prof-xp-card .prof-xp-total { font-size: 13px; font-weight: 700; color: var(--primary); }
-.prof-xp-bar-track { width: 100%; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
-.prof-xp-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
-.prof-xp-detail { font-size: 12px; color: var(--text-2); margin-top: 8px; }
-.prof-stats { margin-bottom: 0; }
-.prof-ach-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.prof-ach-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
-.prof-ach-icon { font-size: 28px; }
-.prof-ach-item strong { font-size: 14px; }
-.prof-ach-item p { font-size: 12px; color: var(--text-2); }
+.profile-page { display: flex; flex-direction: column; gap: 24px; }
+.profile-banner { border-radius: var(--radius); padding: 32px; display: flex; align-items: center; gap: 20px; color: #fff; }
+.profile-avatar { font-size: 56px; }
+.profile-info { flex: 1; }
+.profile-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.profile-level-badge { font-size: 13px; padding: 4px 12px; border-radius: 12px; background: rgba(255,255,255,0.2); font-weight: 600; }
+.avatar-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-btn { width: 40px; height: 40px; border-radius: 8px; font-size: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); transition: all var(--transition); }
+.avatar-btn.selected { border-color: var(--primary); background: var(--primary-l); }
+.xp-info { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+.xp-level-badge { padding: 8px 16px; border-radius: var(--radius-sm); color: #fff; font-weight: 800; font-size: 16px; }
+.xp-bar-wrap { flex: 1; height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.xp-bar { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+.xp-text { font-size: 13px; color: var(--text-2); }
+.xp-stats { display: flex; gap: 16px; font-size: 13px; color: var(--text-2); }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 14px; }
+.stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-val { font-size: 20px; font-weight: 800; }
+.stat-label { font-size: 13px; color: var(--text-2); }
+.recent-ach-list { display: flex; flex-direction: column; gap: 10px; }
+.recent-ach-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.recent-ach-item:last-child { border-bottom: none; }
+.ach-icon { font-size: 28px; }

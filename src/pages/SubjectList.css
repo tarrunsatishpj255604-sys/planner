@@ -1,21 +1,19 @@
-.subject-list { animation: fadeIn 0.3s ease; }
-.subj-loading { display: flex; align-items: center; justify-content: center; padding: 80px; }
-.page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-.icon-picker { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
-.icon-swatch { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; background: var(--surface-2); transition: all var(--transition); }
-.icon-swatch:hover { background: var(--primary-l); }
-.icon-swatch.selected { border-color: var(--primary); background: var(--primary-l); }
-.subj-grid { margin-top: 4px; }
-.subj-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.subj-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.subj-card-top { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 16px 8px; }
-.subj-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.subj-del { width: 28px; height: 28px; border-radius: 8px; color: var(--text-3); font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.subj-del:hover { background: var(--error-l); color: var(--error); }
-.subj-name { font-size: 17px; font-weight: 700; padding: 0 16px; }
-.subj-grade { display: inline-block; padding: 0 16px; font-size: 13px; color: var(--text-2); font-weight: 600; }
-.subj-stat { padding: 8px 16px; font-size: 13px; color: var(--text-2); }
-.subj-prog-wrap { padding: 8px 16px 16px; }
-.subj-prog-label { font-size: 12px; color: var(--text-2); font-weight: 600; margin-bottom: 4px; }
-.subj-prog-track { width: 100%; height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
-.subj-prog-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.subject-page { display: flex; flex-direction: column; gap: 16px; }
+.icon-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.icon-btn { width: 36px; height: 36px; border-radius: 8px; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); transition: all var(--transition); }
+.icon-btn:hover { border-color: var(--primary); }
+.icon-btn.selected { border-color: var(--primary); background: var(--primary-l); }
+.subject-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all var(--transition); animation: slideUp 0.3s ease; }
+.subject-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.subject-card-top { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+.subject-icon { font-size: 32px; }
+.subject-delete { width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.2); color: #fff; font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition); }
+.subject-card:hover .subject-delete { opacity: 1; }
+.subject-delete:hover { background: rgba(0,0,0,0.4); }
+.subject-card-body { padding: 16px; }
+.subject-card-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.subject-grade { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.subject-stats { display: flex; gap: 12px; margin: 8px 0; font-size: 13px; color: var(--text-2); }
+.subject-progress { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
+.subject-progress-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.subject-progress-label { font-size: 11px; color: var(--text-3); display: block; margin-top: 4px; }

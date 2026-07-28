@@ -1,36 +1,32 @@
-.flashcards-page { animation: fadeIn 0.3s ease; }
-.fc-loading { display: flex; align-items: center; justify-content: center; padding: 80px; }
-.page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-.fc-toolbar-btns { display: flex; gap: 8px; }
-.due-banner { padding: 12px 18px; background: var(--warning-l); color: var(--warning); border-radius: var(--radius); font-weight: 600; font-size: 14px; margin-bottom: 16px; }
-.filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-.fc-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow var(--transition); }
+.fc-page { display: flex; flex-direction: column; gap: 16px; }
+.fc-due-banner { padding: 12px 16px; border-radius: var(--radius); background: var(--warning-l); color: var(--warning); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.link-btn { color: inherit; text-decoration: underline; font-weight: 700; }
+.filter-row { display: flex; gap: 8px; }
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.fc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: all var(--transition); }
 .fc-card:hover { box-shadow: var(--shadow); }
-.fc-star { position: absolute; top: 10px; right: 10px; font-size: 18px; color: var(--text-3); }
-.fc-star.active { color: var(--warning); }
-.fc-front, .fc-back { display: flex; flex-direction: column; gap: 4px; }
-.fc-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-3); }
-.fc-front p, .fc-back p { font-size: 14px; line-height: 1.5; }
-.fc-front { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.fc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-.fc-subj { font-size: 12px; font-weight: 600; }
-.fc-del { width: 24px; height: 24px; border-radius: 6px; color: var(--text-3); font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.fc-del:hover { background: var(--error-l); color: var(--error); }
-.fc-quiz { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 40px 20px; animation: fadeIn 0.3s ease; }
-.quiz-top { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 500px; }
-.quiz-progress { font-size: 15px; font-weight: 700; color: var(--text-2); }
-.quiz-card { width: 100%; max-width: 500px; height: 300px; perspective: 1000px; cursor: pointer; }
-.quiz-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s ease; transform-style: preserve-3d; }
-.quiz-card.flipped .quiz-card-inner { transform: rotateY(180deg); }
-.quiz-card-face { position: absolute; inset: 0; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 30px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-md); text-align: center; }
-.quiz-front { background: linear-gradient(135deg, var(--primary-l), var(--surface)); }
-.quiz-back { transform: rotateY(180deg); background: linear-gradient(135deg, var(--success-l), var(--surface)); }
-.quiz-face-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em; }
-.quiz-card-face p { font-size: 20px; font-weight: 600; line-height: 1.5; }
-.quiz-hint { font-size: 12px; color: var(--text-3); }
-.quiz-actions { display: flex; gap: 12px; }
-.quiz-btn { padding: 12px 28px; font-size: 15px; }
-.quiz-btn.miss { border-color: var(--error); color: var(--error); }
-.quiz-btn.miss:hover { background: var(--error-l); }
-.quiz-hint-bottom { font-size: 13px; color: var(--text-3); }
+.fc-card-top { display: flex; justify-content: flex-end; gap: 4px; }
+.fc-star { font-size: 20px; line-height: 1; }
+.fc-del { width: 20px; height: 20px; border-radius: 50%; color: var(--text-3); font-size: 16px; line-height: 1; }
+.fc-del:hover { color: var(--error); }
+.fc-card-front { font-size: 14px; font-weight: 600; }
+.fc-card-back { font-size: 13px; color: var(--text-2); border-top: 1px solid var(--border); padding-top: 8px; }
+.fc-card-sub { font-size: 11px; color: var(--text-3); }
+.fc-quiz-page { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 20px; }
+.fc-quiz-header { display: flex; justify-content: space-between; width: 100%; max-width: 500px; font-size: 14px; color: var(--text-2); }
+.fc-quiz-card { width: 100%; max-width: 500px; min-height: 240px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
+.fc-quiz-card.flipped { background: var(--primary-l); border-color: var(--primary); }
+.fc-quiz-front, .fc-quiz-back { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 20px; }
+.fc-quiz-back { display: none; }
+.fc-quiz-card.flipped .fc-quiz-front { display: none; }
+.fc-quiz-card.flipped .fc-quiz-back { display: flex; }
+.fc-quiz-label-sm { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.fc-quiz-card p { font-size: 18px; font-weight: 700; }
+.fc-quiz-hint { font-size: 12px; color: var(--text-3); }
+.fc-quiz-buttons { display: flex; gap: 12px; }
+.fc-quiz-done { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 60px 20px; }
+.fc-quiz-result { display: flex; flex-direction: column; align-items: center; }
+.fc-quiz-score { font-size: 48px; font-weight: 800; color: var(--primary); }
+.fc-quiz-label { font-size: 18px; font-weight: 600; }
+@media (max-width: 768px) { .fc-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .fc-grid { grid-template-columns: 1fr; } }

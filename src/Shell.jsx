@@ -127,6 +127,7 @@ export default function Shell({ session }) {
           <h1 className="shell-title">{navLabel}</h1>
         </header>
         <div className="shell-content" key={route}>{renderPage()}</div>
+        <footer className="app-credit">Made by <span>Tarrun</span> · SSVM World School · Copyrights Reserved 2026</footer>
       </main>
     </div>
   )
