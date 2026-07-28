@@ -1,72 +1,101 @@
 import { useState, useRef } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
+import { supabase } from '../lib/supabaseClient.js'
 import './StubPages.css'
 
-const FILE_ICONS = { pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', ppt: '📽️', pptx: '📽️', txt: '📃', md: '📃', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', zip: '🗜️', rar: '🗜️', mp4: '🎬', mp3: '🎵', default: '📁' }
+function fileIcon(type) {
+  if (type?.includes('pdf')) return '📄'
+  if (type?.includes('image')) return '🖼️'
+  if (type?.includes('word') || type?.includes('document')) return '📝'
+  if (type?.includes('zip') || type?.includes('compressed')) return '🗜️'
+  if (type?.includes('video')) return '🎬'
+  if (type?.includes('audio')) return '🎵'
+  if (type?.includes('spreadsheet')) return '📊'
+  if (type?.includes('presentation')) return '📽️'
+  return '📎'
+}
 
-function getIcon(name) {
-  const ext = name.split('.').pop()?.toLowerCase()
-  return FILE_ICONS[ext] || FILE_ICONS.default
+function formatSize(bytes) {
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export default function Files() {
-  const { subjects } = useApp()
-  const [files, setFiles] = useState([])
-  const [subjectId, setSubjectId] = useState('')
-  const inputRef = useRef(null)
+  const { files, subjects, loading, refresh, user, unlockAchievement } = useApp()
+  const [uploading, setUploading] = useState(false)
+  const [subjectSelects, setSubjectSelects] = useState({})
+  const fileRef = useRef(null)
 
-  const handleUpload = (e) => {
-    const selected = Array.from(e.target.files || [])
-    const newFiles = selected.map(f => ({ id: Date.now() + Math.random(), name: f.name, size: f.size, subjectId: subjectId || null }))
-    setFiles(prev => [...prev, ...newFiles])
-    if (inputRef.current) inputRef.current.value = ''
+  const onPick = () => fileRef.current?.click()
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploading(true)
+    const path = `${user.id}/${Date.now()}-${file.name}`
+    const { error: upErr } = await supabase.storage.from('user_files').upload(path, file)
+    if (!upErr) {
+      await supabase.from('user_files').insert({ file_name: file.name, file_path: path, file_size: file.size, file_type: file.type, subject_id: subjectSelects[file.name] || null })
+      await unlockAchievement('files_1')
+      refresh()
+    }
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
   }
 
-  const removeFile = (id) => setFiles(prev => prev.filter(f => f.id !== id))
+  const updateFileSubject = async (id, sid) => {
+    await supabase.from('user_files').update({ subject_id: sid || null }).eq('id', id)
+    refresh()
+  }
 
-  const formatSize = (bytes) => { if (bytes < 1024) return bytes + ' B'; if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'; return (bytes / 1048576).toFixed(1) + ' MB' }
+  const download = async (f) => {
+    const { data } = supabase.storage.from('user_files').getPublicUrl(f.file_path)
+    if (data?.publicUrl) window.open(data.publicUrl, '_blank')
+  }
+
+  const del = async (f) => {
+    await supabase.storage.from('user_files').remove([f.file_path])
+    await supabase.from('user_files').delete().eq('id', f.id)
+    refresh()
+  }
+
+  if (loading) return <div className="stub-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
 
   return (
-    <div className="stub-page files-page">
-      <div className="stub-hero">
-        <div className="stub-hero-icon">📁</div>
-        <h1>Files</h1>
-        <p className="stub-tagline">Upload and organize your study materials — coming soon!</p>
-        <div className="stub-badge">Beta</div>
-      </div>
-
-      <div className="files-upload-card">
-        <div className="files-upload-row">
-          <select value={subjectId} onChange={e => setSubjectId(e.target.value)} className="files-select">
-            <option value="">No subject</option>
-            {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-          </select>
-          <button className="btn btn-primary" onClick={() => inputRef.current?.click()}>+ Upload Files</button>
-          <input ref={inputRef} type="file" multiple style={{ display: 'none' }} onChange={handleUpload} />
-        </div>
+    <div className="files-page">
+      <div className="page-toolbar">
+        <div><h2 className="page-title">Files</h2><p className="page-desc">Upload and organize your study materials.</p></div>
+        <button className="btn btn-primary" onClick={onPick} disabled={uploading}>{uploading ? 'Uploading...' : '+ Upload File'}</button>
+        <input type="file" ref={fileRef} style={{ display: 'none' }} onChange={onFile} />
       </div>
 
       {files.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>📂</div>
-          <h3>No files uploaded</h3>
-          <p>Upload your study materials to keep them organized.</p>
+          <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>📁</div>
+          <h3>No files yet</h3><p>Upload your first file to get started.</p>
+          <button className="btn btn-primary" onClick={onPick} disabled={uploading}>{uploading ? 'Uploading...' : '+ Upload File'}</button>
         </div>
       ) : (
         <div className="files-list">
-          {files.map(f => {
-            const subject = subjects.find(s => s.id === f.subjectId)
-            return (
-              <div key={f.id} className="file-item">
-                <span className="file-icon">{getIcon(f.name)}</span>
-                <div className="file-info">
-                  <span className="file-name">{f.name}</span>
-                  <span className="file-meta">{formatSize(f.size)}{subject && ` · ${subject.icon} ${subject.name}`}</span>
-                </div>
-                <button className="btn btn-sm btn-ghost" onClick={() => removeFile(f.id)}>🗑️</button>
+          {files.map(f => (
+            <div key={f.id} className="card file-row">
+              <span className="file-icon">{fileIcon(f.file_type)}</span>
+              <div className="file-info">
+                <strong className="file-name">{f.file_name}</strong>
+                <span className="file-size">{formatSize(f.file_size)}</span>
               </div>
-            )
-          })}
+              <select className="file-subject-select" value={f.subject_id || ''} onChange={e => updateFileSubject(f.id, e.target.value)}>
+                <option value="">No subject</option>
+                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <div className="file-actions">
+                <button className="btn btn-ghost btn-sm" onClick={() => download(f)}>⬇ Download</button>
+                <button className="btn btn-ghost btn-sm file-del" onClick={() => del(f)}>Delete</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

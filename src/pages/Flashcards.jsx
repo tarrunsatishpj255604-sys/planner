@@ -1,155 +1,147 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
-import { XP_REWARDS, todayStr } from '../lib/helpers.js'
+import { todayStr, XP_REWARDS, ACHIEVEMENT_DEFS } from '../lib/helpers.js'
 import './FlashcardsPage.css'
 
 export default function Flashcards() {
-  const { user, flashcards, subjects, addXp, unlockAchievement, refresh } = useApp()
+  const { flashcards, subjects, loading, refresh, addXp, unlockAchievement } = useApp()
   const [showForm, setShowForm] = useState(false)
   const [front, setFront] = useState('')
   const [back, setBack] = useState('')
   const [subjectId, setSubjectId] = useState('')
+  const [starredOnly, setStarredOnly] = useState(false)
   const [quizMode, setQuizMode] = useState(false)
   const [quizCards, setQuizCards] = useState([])
   const [quizIdx, setQuizIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [starredOnly, setStarredOnly] = useState(false)
+  const [reviewCount, setReviewCount] = useState(0)
+  const quizTimer = useRef(null)
 
   const today = todayStr()
-  const dueCards = useMemo(() => flashcards.filter(f => !f.next_review || f.next_review <= today), [flashcards, today])
-  const visibleCards = starredOnly ? flashcards.filter(f => f.starred) : flashcards
+  const dueCards = flashcards.filter(f => (f.srs_due || today) <= today)
+  const visible = starredOnly ? flashcards.filter(f => f.starred) : flashcards
+
+  useEffect(() => () => clearInterval(quizTimer.current), [])
 
   const addCard = async () => {
     if (!front.trim() || !back.trim()) return
-    await supabase.from('flashcards').insert({ user_id: user.id, subject_id: subjectId || null, front: front.trim(), back: back.trim() })
+    await supabase.from('flashcards').insert({ front: front.trim(), back: back.trim(), subject_id: subjectId || null, srs_interval: 1, srs_ease: 250, srs_due: todayStr(), review_count: 0, starred: false })
     setFront(''); setBack(''); setSubjectId(''); refresh()
   }
 
-  const deleteCard = async (id) => { await supabase.from('flashcards').delete().eq('id', id); refresh() }
+  const del = async (id) => { await supabase.from('flashcards').delete().eq('id', id); refresh() }
 
-  const toggleStar = async (card) => { await supabase.from('flashcards').update({ starred: !card.starred }).eq('id', card.id); refresh() }
+  const toggleStar = async (f) => { await supabase.from('flashcards').update({ starred: !f.starred }).eq('id', f.id); refresh() }
 
   const startQuiz = () => {
-    const shuffled = [...dueCards].sort(() => Math.random() - 0.5)
-    setQuizCards(shuffled); setQuizIdx(0); setFlipped(false); setQuizMode(true)
+    const pool = dueCards.length > 0 ? dueCards : flashcards
+    if (pool.length === 0) return
+    setQuizCards([...pool].sort(() => Math.random() - 0.5))
+    setQuizIdx(0); setFlipped(false); setReviewCount(0); setQuizMode(true)
   }
 
-  const nextCard = () => { setFlipped(false); setQuizIdx(i => i + 1) }
+  const endQuiz = () => { setQuizMode(false); setQuizCards([]); setQuizIdx(0); setFlipped(false) }
 
-  const reviewCard = async (card, knewIt) => {
-    const interval = knewIt ? 2 : 1
-    const next = new Date(); next.setDate(next.getDate() + interval)
-    await supabase.from('flashcards').update({ review_count: (card.review_count || 0) + 1, next_review: next.toISOString().split('T')[0] }).eq('id', card.id)
+  const reviewCard = async (gotIt) => {
+    const card = quizCards[quizIdx]
+    if (!card) return
+    let interval = card.srs_interval || 1
+    let ease = card.srs_ease || 250
+    if (gotIt) { interval = interval * 2; ease = ease + 20 }
+    else { interval = 1; ease = Math.max(130, ease - 20) }
+    const due = new Date(); due.setDate(due.getDate() + interval)
+    await supabase.from('flashcards').update({ srs_interval: interval, srs_ease: ease, srs_due: due.toISOString().split('T')[0], review_count: (card.review_count || 0) + 1 }).eq('id', card.id)
+    const newCount = reviewCount + 1
+    setReviewCount(newCount)
     await addXp(XP_REWARDS.flashcard_review)
-    await unlockAchievement('first_session')
-    nextCard()
+    if (newCount >= 10) await unlockAchievement('fc_review_10')
+    if (quizIdx + 1 < quizCards.length) { setQuizIdx(quizIdx + 1); setFlipped(false) }
+    else { refresh(); endQuiz() }
   }
 
-  const currentCard = quizCards[quizIdx]
+  if (loading) return <div className="fc-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
 
-  useEffect(() => { if (quizMode && quizIdx >= quizCards.length) setQuizMode(false) }, [quizIdx, quizCards.length, quizMode])
+  if (quizMode) {
+    const card = quizCards[quizIdx]
+    return (
+      <div className="fc-quiz">
+        <div className="quiz-top">
+          <span className="quiz-progress">{quizIdx + 1} / {quizCards.length}</span>
+          <button className="btn btn-ghost btn-sm" onClick={endQuiz}>✕ Exit</button>
+        </div>
+        <div className={`quiz-card ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(f => !f)}>
+          <div className="quiz-card-inner">
+            <div className="quiz-card-face quiz-front">
+              <span className="quiz-face-label">Question</span>
+              <p>{card?.front}</p>
+              <span className="quiz-hint">Click to flip</span>
+            </div>
+            <div className="quiz-card-face quiz-back">
+              <span className="quiz-face-label">Answer</span>
+              <p>{card?.back}</p>
+            </div>
+          </div>
+        </div>
+        {flipped ? (
+          <div className="quiz-actions">
+            <button className="btn btn-outline quiz-btn miss" onClick={() => reviewCard(false)}>Didn't know</button>
+            <button className="btn btn-primary quiz-btn got" onClick={() => reviewCard(true)}>Got it</button>
+          </div>
+        ) : (
+          <div className="quiz-hint-bottom">Flip the card to reveal the answer</div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flashcards-page">
       <div className="page-toolbar">
-        <div>
-          <h2>Flashcards</h2>
-          <p className="page-desc">Create flashcards with spaced repetition. Quiz yourself and earn XP.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {dueCards.length > 0 && <button className="btn btn-outline" onClick={startQuiz}>🎯 Quiz ({dueCards.length})</button>}
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : '+ Add Card'}</button>
+        <div><h2 className="page-title">Flashcards</h2><p className="page-desc">Spaced repetition for better memory.</p></div>
+        <div className="fc-toolbar-btns">
+          <button className="btn btn-outline" onClick={startQuiz} disabled={flashcards.length === 0}>🃏 Quiz ({dueCards.length} due)</button>
+          <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Card'}</button>
         </div>
       </div>
 
-      {dueCards.length > 0 && !quizMode && (
-        <div className="fc-due-banner" style={{ background: 'var(--warning-l)' }}>
-          <span>📚 {dueCards.length} card{dueCards.length !== 1 ? 's' : ''} due for review</span>
-          <button className="btn btn-sm btn-primary" onClick={startQuiz}>Review Now</button>
+      {dueCards.length > 0 && (
+        <div className="due-banner">📚 {dueCards.length} card{dueCards.length > 1 ? 's' : ''} due for review today!</div>
+      )}
+
+      {showForm && (
+        <div className="form-card">
+          <div className="form-head"><h3>New Flashcard</h3></div>
+          <div className="form-field"><label>Front (Question)</label><textarea value={front} onChange={e => setFront(e.target.value)} rows={2} placeholder="e.g. What is the capital of France?" /></div>
+          <div className="form-field"><label>Back (Answer)</label><textarea value={back} onChange={e => setBack(e.target.value)} rows={2} placeholder="e.g. Paris" /></div>
+          <div className="form-field"><label>Subject</label>
+            <select value={subjectId} onChange={e => setSubjectId(e.target.value)}>
+              <option value="">None</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div className="form-actions"><button className="btn btn-primary" onClick={addCard} disabled={!front.trim() || !back.trim()}>Add Card</button></div>
         </div>
       )}
 
-      {quizMode && currentCard ? (
-        <div className="fc-quiz">
-          <div className="fc-quiz-header">
-            <span>Card {quizIdx + 1} / {quizCards.length}</span>
-            <button className="btn btn-sm btn-ghost" onClick={() => setQuizMode(false)}>Exit Quiz</button>
-          </div>
-          <div className={`fc-quiz-card ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)}>
-            <div className="fc-quiz-face fc-quiz-front">
-              <span className="fc-quiz-label">Front</span>
-              <p className="fc-quiz-text">{currentCard.front}</p>
-              <span className="fc-quiz-hint">Click to flip</span>
-            </div>
-            <div className="fc-quiz-face fc-quiz-back">
-              <span className="fc-quiz-label">Back</span>
-              <p className="fc-quiz-text">{currentCard.back}</p>
-              <span className="fc-quiz-hint">Click to flip</span>
-            </div>
-          </div>
-          {flipped && (
-            <div className="fc-quiz-actions">
-              <button className="btn btn-outline fc-didnt" onClick={() => reviewCard(currentCard, false)}>Didn't Know</button>
-              <button className="btn btn-primary fc-gotit" onClick={() => reviewCard(currentCard, true)}>Got It</button>
-            </div>
-          )}
-        </div>
+      <div className="filter-row">
+        <button className={`filter-chip ${!starredOnly ? 'active' : ''}`} onClick={() => setStarredOnly(false)}>All <span className="fc-count">{flashcards.length}</span></button>
+        <button className={`filter-chip ${starredOnly ? 'active' : ''}`} onClick={() => setStarredOnly(true)}>⭐ Starred <span className="fc-count">{flashcards.filter(f => f.starred).length}</span></button>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="empty-state"><div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>🃏</div><h3>No flashcards</h3><p>Create cards or start a quiz.</p></div>
       ) : (
-        <>
-          {showForm && (
-            <div className="form-card">
-              <div className="form-head"><h3>New Flashcard</h3></div>
-              <div className="form-row">
-                <div className="form-field">
-                  <label>Front (Question)</label>
-                  <textarea rows={3} placeholder="What is..." value={front} onChange={e => setFront(e.target.value)} autoFocus />
-                </div>
-                <div className="form-field">
-                  <label>Back (Answer)</label>
-                  <textarea rows={3} placeholder="The answer is..." value={back} onChange={e => setBack(e.target.value)} />
-                </div>
-              </div>
-              <div className="form-field">
-                <label>Subject</label>
-                <select value={subjectId} onChange={e => setSubjectId(e.target.value)}>
-                  <option value="">No subject</option>
-                  {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-                </select>
-              </div>
-              <div className="form-actions">
-                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={addCard}>Add Card</button>
-              </div>
+        <div className="fc-grid">
+          {visible.map(f => (
+            <div key={f.id} className="fc-card">
+              <button className={`fc-star ${f.starred ? 'active' : ''}`} onClick={() => toggleStar(f)}>{f.starred ? '⭐' : '☆'}</button>
+              <div className="fc-front"><span className="fc-label">Q</span><p>{f.front}</p></div>
+              <div className="fc-back"><span className="fc-label">A</span><p>{f.back}</p></div>
+              <div className="fc-foot">{f.subject && <span className="fc-subj" style={{ color: f.subject.color }}>{f.subject.name}</span>}<button className="fc-del" onClick={() => del(f.id)}>×</button></div>
             </div>
-          )}
-
-          <div className="fc-toolbar">
-            <button className={`filter-chip ${starredOnly ? 'active' : ''}`} onClick={() => setStarredOnly(!starredOnly)}>⭐ Starred Only</button>
-          </div>
-
-          {visibleCards.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>🃏</div>
-              <h3>No flashcards yet</h3>
-              <p>Create your first flashcard to start studying.</p>
-            </div>
-          ) : (
-            <div className="fc-card-grid">
-              {visibleCards.map(card => (
-                <div key={card.id} className="fc-list-card">
-                  <div className="fc-list-front">{card.front}</div>
-                  <div className="fc-list-back">{card.back}</div>
-                  {card.subject && <span className="fc-list-sub" style={{ background: card.subject.color + '20', color: card.subject.color }}>{card.subject.icon} {card.subject.name}</span>}
-                  <div className="fc-list-actions">
-                    <button className="btn btn-sm btn-ghost" onClick={() => toggleStar(card)}>{card.starred ? '⭐' : '☆'}</button>
-                    <button className="btn btn-sm btn-ghost" onClick={() => deleteCard(card.id)}>🗑️</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
     </div>
   )

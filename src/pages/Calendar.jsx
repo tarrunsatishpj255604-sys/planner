@@ -1,100 +1,91 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
-import { formatDate } from '../lib/helpers.js'
+import { formatDate, todayStr } from '../lib/helpers.js'
 import './CalendarPage.css'
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-
 export default function Calendar() {
-  const { tasks, exams, sessions } = useApp()
-  const [cursor, setCursor] = useState(new Date())
-  const [selectedDay, setSelectedDay] = useState(null)
+  const { exams, tasks, sessions, loading } = useApp()
+  const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
+  const [selected, setSelected] = useState(todayStr())
 
-  const year = cursor.getFullYear()
-  const month = cursor.getMonth()
+  if (loading) return <div className="cal-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
+
+  const year = cursor.getFullYear(), month = cursor.getMonth()
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-  const eventsByDate = useMemo(() => {
-    const map = {}
-    exams.forEach(e => { const d = e.exam_date; if (!map[d]) map[d] = []; map[d].push({ type: 'exam', label: e.title, color: e.subject?.color || '#ef4444' }) })
-    tasks.forEach(t => { if (t.due_date && !t.archived) { const d = t.due_date; if (!map[d]) map[d] = []; map[d].push({ type: 'task', label: t.title, color: t.subject?.color || '#4f7cff' }) } })
-    sessions.forEach(s => { const d = s.session_date; if (!map[d]) map[d] = []; map[d].push({ type: 'session', label: `${s.duration}m session`, color: s.subject?.color || '#22c55e' }) })
-    return map
-  }, [tasks, exams, sessions])
+  const today = todayStr()
+  const monthName = cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 
   const cells = []
   for (let i = 0; i < firstDay; i++) cells.push(null)
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d))
 
-  const todayStr = new Date().toISOString().split('T')[0]
-  const dateStr = (d) => { const dd = String(d).padStart(2, '0'); const mm = String(month + 1).padStart(2, '0'); return `${year}-${mm}-${dd}` }
+  const dateStr = (d) => d ? d.toISOString().split('T')[0] : ''
+  const eventsFor = (ds) => {
+    if (!ds) return []
+    const e = exams.filter(x => x.exam_date === ds).map(x => ({ type: 'exam', label: x.title, color: x.subject?.color || '#ef4444' }))
+    const t = tasks.filter(x => x.due_date === ds).map(x => ({ type: 'task', label: x.title, color: x.subject?.color || '#4f7cff' }))
+    const s = sessions.filter(x => x.session_date === ds).map(x => ({ type: 'session', label: `${x.duration_minutes}m`, color: x.subject?.color || '#22c55e' }))
+    return [...e, ...t, ...s]
+  }
 
-  const prevMonth = () => setCursor(new Date(year, month - 1, 1))
-  const nextMonth = () => setCursor(new Date(year, month + 1, 1))
-  const goToday = () => { setCursor(new Date()); setSelectedDay(todayStr) }
+  const selectedEvents = eventsFor(selected)
 
-  const selectedEvents = selectedDay ? eventsByDate[selectedDay] || [] : []
+  const prev = () => setCursor(new Date(year, month - 1, 1))
+  const next = () => setCursor(new Date(year, month + 1, 1))
+  const goToday = () => { const d = new Date(); setCursor(new Date(d.getFullYear(), d.getMonth(), 1)); setSelected(today) }
 
   return (
     <div className="calendar-page">
       <div className="page-toolbar">
-        <div>
-          <h2>Calendar</h2>
-          <p className="page-desc">View your exams, tasks, and study sessions in one place.</p>
+        <div><h2 className="page-title">Calendar</h2><p className="page-desc">Your study schedule at a glance.</p></div>
+        <div className="cal-nav">
+          <button className="btn btn-outline btn-sm" onClick={prev}>←</button>
+          <button className="btn btn-ghost btn-sm" onClick={goToday}>Today</button>
+          <button className="btn btn-outline btn-sm" onClick={next}>→</button>
         </div>
       </div>
 
-      <div className="cal-nav">
-        <button className="btn btn-ghost btn-sm" onClick={prevMonth}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-        <h3 className="cal-month">{MONTHS[month]} {year}</h3>
-        <button className="btn btn-ghost btn-sm" onClick={nextMonth}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
-        <button className="btn btn-outline btn-sm cal-today" onClick={goToday}>Today</button>
-      </div>
+      <div className="grid-2 cal-layout">
+        <div className="card cal-card">
+          <div className="cal-month-head"><h3>{monthName}</h3></div>
+          <div className="cal-grid">
+            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d} className="cal-dow">{d}</div>)}
+            {cells.map((d, i) => {
+              const ds = dateStr(d)
+              const evts = eventsFor(ds)
+              const isToday = ds === today
+              const isSel = ds === selected
+              return (
+                <div key={i} className={`cal-cell ${!d ? 'empty' : ''} ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}`} onClick={() => d && setSelected(ds)}>
+                  {d && <span className="cal-day-num">{d.getDate()}</span>}
+                  {evts.length > 0 && <div className="cal-dots">{evts.slice(0, 3).map((e, j) => <span key={j} className="cal-dot" style={{ background: e.color }} />)}</div>}
+                </div>
+              )
+            })}
+          </div>
+          <div className="cal-legend">
+            <span className="cal-leg"><span className="cal-dot" style={{ background: '#ef4444' }} /> Exams</span>
+            <span className="cal-leg"><span className="cal-dot" style={{ background: '#4f7cff' }} /> Tasks</span>
+            <span className="cal-leg"><span className="cal-dot" style={{ background: '#22c55e' }} /> Sessions</span>
+          </div>
+        </div>
 
-      <div className="cal-grid">
-        {DOW.map(d => <div key={d} className="cal-dow">{d}</div>)}
-        {cells.map((d, i) => {
-          if (d === null) return <div key={i} className="cal-cell empty" />
-          const ds = dateStr(d)
-          const events = eventsByDate[ds] || []
-          const isToday = ds === todayStr
-          const isSelected = ds === selectedDay
-          return (
-            <div key={i} className={`cal-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`} onClick={() => setSelectedDay(ds)}>
-              <span className="cal-day-num">{d}</span>
-              <div className="cal-dots">
-                {events.slice(0, 3).map((e, j) => <span key={j} className="cal-dot" style={{ background: e.color }} />)}
-                {events.length > 3 && <span className="cal-dot-more">+{events.length - 3}</span>}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="cal-legend">
-        <span className="cal-leg-item"><span className="cal-leg-dot" style={{ background: '#ef4444' }} /> Exams</span>
-        <span className="cal-leg-item"><span className="cal-leg-dot" style={{ background: '#4f7cff' }} /> Tasks</span>
-        <span className="cal-leg-item"><span className="cal-leg-dot" style={{ background: '#22c55e' }} /> Sessions</span>
-      </div>
-
-      {selectedDay && (
-        <div className="card cal-day-events">
-          <div className="card-head"><h3>{formatDate(selectedDay)}</h3></div>
-          {selectedEvents.length === 0 ? <p className="dash-empty">No events on this day.</p> : (
+        <div className="card cal-events">
+          <div className="card-head"><h3>{selected ? new Date(selected + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'Select a day'}</h3></div>
+          {selectedEvents.length === 0 ? <div className="dash-empty">No events on this day.</div> : (
             <div className="cal-event-list">
               {selectedEvents.map((e, i) => (
-                <div key={i} className="cal-event">
+                <div key={i} className="cal-event-item">
                   <span className="cal-event-dot" style={{ background: e.color }} />
-                  <span className="cal-event-label">{e.label}</span>
                   <span className="cal-event-type">{e.type}</span>
+                  <span className="cal-event-label">{e.label}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

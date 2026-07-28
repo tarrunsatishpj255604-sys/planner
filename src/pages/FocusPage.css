@@ -1,29 +1,38 @@
-.focus-page { display: flex; flex-direction: column; gap: 20px; }
-.focus-main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-.focus-timer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
-.focus-modes { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: var(--radius-sm); }
-.focus-mode-btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-2); transition: all var(--transition); }
-.focus-mode-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
-.focus-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
-.focus-ring { width: 280px; height: 280px; }
-.focus-ring-text { position: absolute; display: flex; flex-direction: column; align-items: center; }
-.focus-time { font-size: 48px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.focus-mode-label { font-size: 13px; color: var(--text-2); text-transform: uppercase; font-weight: 600; margin-top: 4px; }
-.focus-controls { display: flex; gap: 10px; align-items: center; }
-.focus-start { padding: 12px 32px; font-size: 15px; }
-.focus-presets { display: flex; gap: 8px; }
-.focus-preset { padding: 6px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface-2); transition: all var(--transition); }
-.focus-preset:hover { background: var(--primary-l); color: var(--primary); }
-.focus-preset.active { background: var(--primary); color: #fff; }
+.focus-page { animation: fadeIn 0.3s ease; }
+.page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.focus-layout { align-items: flex-start; }
+.focus-main { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.mode-tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: var(--radius-sm); }
+.mode-tab { padding: 8px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); transition: all var(--transition); }
+.mode-tab.active { background: var(--primary); color: #fff; }
+.preset-row { display: flex; gap: 8px; }
+.preset-btn { padding: 8px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: 1px solid var(--border); color: var(--text-2); background: var(--surface); transition: all var(--transition); }
+.preset-btn:hover { border-color: var(--primary); }
+.preset-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.timer-ring-wrap { position: relative; width: 300px; height: 300px; }
+.timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.timer-display { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.timer-mode { font-size: 13px; color: var(--text-2); text-transform: capitalize; font-weight: 600; }
+.timer-controls { display: flex; gap: 10px; }
+.timer-btn { padding: 12px 24px; font-size: 15px; }
+.focus-options { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
 .focus-side { display: flex; flex-direction: column; gap: 16px; }
-.ambient-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.ambient-chip { padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface-2); transition: all var(--transition); }
-.ambient-chip:hover { background: var(--primary-l); color: var(--primary); }
-.ambient-chip.active { background: var(--primary); color: #fff; }
-.focus-sess-list { display: flex; flex-direction: column; gap: 8px; }
-.focus-sess-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
-.fs-sub { flex: 1; font-size: 14px; font-weight: 500; }
-.fs-dur { font-size: 13px; font-weight: 700; color: var(--primary); }
-.fs-mode { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--primary-l); color: var(--primary); font-weight: 600; }
-@media (max-width: 900px) { .focus-main { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .focus-ring { width: 220px; height: 220px; } .focus-time { font-size: 36px; } }
+.sound-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.sound-chip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: all var(--transition); }
+.sound-chip:hover { background: var(--surface-2); }
+.sound-chip.active { background: var(--primary-l); border-color: var(--primary); }
+.sound-icon { font-size: 24px; }
+.sound-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.sound-chip.active .sound-label { color: var(--primary); }
+.volume-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.volume-row label { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.volume-row input[type="range"] { flex: 1; accent-color: var(--primary); }
+.vol-val { font-size: 13px; font-weight: 600; color: var(--text-2); min-width: 36px; text-align: right; }
+.sound-stop { width: 100%; }
+.today-total { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+.session-list { display: flex; flex-direction: column; gap: 8px; }
+.session-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.session-mins { font-size: 14px; font-weight: 700; }
+.session-sub { font-size: 12px; font-weight: 600; }
+.session-note { font-size: 12px; color: var(--text-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 768px) { .timer-ring-wrap { width: 240px; height: 240px; } .timer-display { font-size: 44px; } }

@@ -1,19 +1,19 @@
-.achievements-page { display: flex; flex-direction: column; gap: 16px; }
-.ach-progress-card { display: flex; flex-direction: column; gap: 12px; }
-.ach-progress-top { display: flex; align-items: center; justify-content: space-between; }
-.ach-progress-info h3 { font-size: 18px; font-weight: 800; }
-.ach-progress-info span { font-size: 13px; color: var(--text-2); }
-.ach-progress-pct { font-size: 24px; font-weight: 800; color: var(--primary); }
-.ach-progress-bar { height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
-.ach-progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
-.ach-grid { margin-top: 4px; }
-.ach-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; gap: 14px; transition: all var(--transition); animation: slideUp 0.2s ease; }
-.ach-card.unlocked { border-color: var(--primary); box-shadow: 0 2px 8px rgba(79,124,255,0.1); }
-.ach-card.locked { opacity: 0.6; }
-.ach-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
-.ach-info { display: flex; flex-direction: column; gap: 4px; }
-.ach-title { font-size: 15px; font-weight: 700; }
-.ach-desc { font-size: 13px; color: var(--text-2); }
-.ach-status { font-size: 12px; font-weight: 600; margin-top: 4px; }
-.ach-status.unlocked { color: var(--success); }
-.ach-status.locked { color: var(--text-3); }
+.achievements-page { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
+.ach-loading { display: flex; align-items: center; justify-content: center; padding: 80px; }
+.page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.ach-progress-card { padding: 20px 24px; }
+.ach-progress-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ach-progress-top h3 { font-size: 18px; font-weight: 700; }
+.ach-pct { font-size: 18px; font-weight: 800; color: var(--primary); }
+.ach-progress-bar-track { width: 100%; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.ach-progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ach-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: all var(--transition); }
+.ach-card.unlocked { border-color: var(--primary); border-width: 2px; background: var(--primary-l); }
+.ach-card.locked { opacity: 0.55; filter: grayscale(0.8); }
+.ach-icon { font-size: 32px; flex-shrink: 0; }
+.ach-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach-title { font-size: 14px; font-weight: 700; }
+.ach-desc { font-size: 12px; color: var(--text-2); }
+.ach-check { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ach-lock { font-size: 16px; flex-shrink: 0; }

@@ -16,6 +16,7 @@ export function AppProvider({ session, children }) {
   const [achievements, setAchievements] = useState([])
   const [quickNotes, setQuickNotes] = useState([])
   const [settings, setSettings] = useState(null)
+  const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
   const user = session?.user
 
@@ -39,7 +40,7 @@ export function AppProvider({ session, children }) {
   const fetchAll = useCallback(async () => {
     if (!user) return
     await Promise.all([ensureProfile(), ensureSettings()])
-    const [subRes, taskRes, noteRes, fcRes, sessRes, examRes, achRes, qnRes] = await Promise.all([
+    const [subRes, taskRes, noteRes, fcRes, sessRes, examRes, achRes, qnRes, fileRes] = await Promise.all([
       supabase.from('subjects').select('*').order('created_at', { ascending: true }),
       supabase.from('tasks').select('*, subject:subjects(*)').order('created_at', { ascending: false }),
       supabase.from('notes').select('*, subject:subjects(*)').order('updated_at', { ascending: false }),
@@ -48,6 +49,7 @@ export function AppProvider({ session, children }) {
       supabase.from('exams').select('*, subject:subjects(*)').order('exam_date', { ascending: true }),
       supabase.from('achievements').select('*'),
       supabase.from('quick_notes').select('*').order('created_at', { ascending: false }),
+      supabase.from('user_files').select('*, subject:subjects(*)').order('created_at', { ascending: false }),
     ])
     if (subRes.data) setSubjects(subRes.data)
     if (taskRes.data) setTasks(taskRes.data)
@@ -57,6 +59,7 @@ export function AppProvider({ session, children }) {
     if (examRes.data) setExams(examRes.data)
     if (achRes.data) setAchievements(achRes.data)
     if (qnRes.data) setQuickNotes(qnRes.data)
+    if (fileRes.data) setFiles(fileRes.data)
     setLoading(false)
   }, [user, ensureProfile, ensureSettings])
 
@@ -92,7 +95,7 @@ export function AppProvider({ session, children }) {
   }, [profile, user])
 
   return (
-    <AppContext.Provider value={{ user, profile, subjects, tasks, notes, flashcards, sessions, exams, achievements, quickNotes, settings, loading, refresh, addXp, unlockAchievement, updateSettings, updateProfile }}>
+    <AppContext.Provider value={{ user, profile, subjects, tasks, notes, flashcards, sessions, exams, achievements, quickNotes, files, settings, loading, refresh, addXp, unlockAchievement, updateSettings, updateProfile }}>
       {children}
     </AppContext.Provider>
   )

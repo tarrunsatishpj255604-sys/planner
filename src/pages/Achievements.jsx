@@ -1,46 +1,42 @@
-import { useMemo } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { ACHIEVEMENT_DEFS } from '../lib/helpers.js'
 import './AchievementsPage.css'
 
 export default function Achievements() {
-  const { achievements } = useApp()
-  const unlockedKeys = useMemo(() => new Set(achievements.map(a => a.key)), [achievements])
-  const unlockedCount = ACHIEVEMENT_DEFS.filter(a => unlockedKeys.has(a.key)).length
-  const totalCount = ACHIEVEMENT_DEFS.length
-  const progress = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0
+  const { achievements, loading } = useApp()
+
+  if (loading) return <div className="ach-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
+
+  const unlockedKeys = new Set(achievements.map(a => a.key))
+  const unlockedCount = ACHIEVEMENT_DEFS.filter(d => unlockedKeys.has(d.key)).length
+  const total = ACHIEVEMENT_DEFS.length
+  const pct = Math.round((unlockedCount / total) * 100)
 
   return (
     <div className="achievements-page">
       <div className="page-toolbar">
-        <div>
-          <h2>Achievements</h2>
-          <p className="page-desc">Unlock badges by completing tasks, studying, and reaching milestones.</p>
-        </div>
+        <div><h2 className="page-title">Achievements</h2><p className="page-desc">Unlock badges as you study and grow.</p></div>
       </div>
 
       <div className="card ach-progress-card">
         <div className="ach-progress-top">
-          <div className="ach-progress-info">
-            <h3>{unlockedCount} / {totalCount} Unlocked</h3>
-            <span>Keep studying to unlock more achievements!</span>
-          </div>
-          <span className="ach-progress-pct">{progress}%</span>
+          <h3>{unlockedCount} / {total} Unlocked</h3>
+          <span className="ach-pct">{pct}%</span>
         </div>
-        <div className="ach-progress-bar"><div className="ach-progress-fill" style={{ width: `${progress}%`, background: 'var(--primary)' }} /></div>
+        <div className="ach-progress-bar-track"><div className="ach-progress-bar-fill" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--primary), var(--accent))' }} /></div>
       </div>
 
-      <div className="grid-3 ach-grid">
-        {ACHIEVEMENT_DEFS.map(a => {
-          const unlocked = unlockedKeys.has(a.key)
+      <div className="ach-grid">
+        {ACHIEVEMENT_DEFS.map(def => {
+          const unlocked = unlockedKeys.has(def.key)
           return (
-            <div key={a.key} className={`ach-card ${unlocked ? 'unlocked' : 'locked'}`}>
-              <div className="ach-icon" style={unlocked ? { background: 'var(--primary-l)' } : { background: 'var(--surface-2)' }}>{a.icon}</div>
+            <div key={def.key} className={`ach-card ${unlocked ? 'unlocked' : 'locked'}`}>
+              <span className="ach-icon">{def.icon}</span>
               <div className="ach-info">
-                <span className="ach-title">{a.title}</span>
-                <span className="ach-desc">{a.desc}</span>
-                {unlocked ? <span className="ach-status unlocked">✓ Unlocked</span> : <span className="ach-status locked">🔒 Locked</span>}
+                <strong className="ach-title">{def.title}</strong>
+                <p className="ach-desc">{def.desc}</p>
               </div>
+              {unlocked ? <span className="ach-check">✓</span> : <span className="ach-lock">🔒</span>}
             </div>
           )
         })}

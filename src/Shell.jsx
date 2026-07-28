@@ -45,9 +45,11 @@ export default function Shell({ session }) {
   const primary = settings?.primary_color || '#4f7cff'
   const accent = settings?.accent_color || '#ec4899'
   const radius = settings?.border_radius || 12
+  const font = settings?.font || 'Inter'
 
   useEffect(() => {
     const r = document.documentElement
+    r.style.setProperty('--font', `'${font}', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`)
     r.style.setProperty('--bg', theme.bg); r.style.setProperty('--surface', theme.surface)
     r.style.setProperty('--text', theme.text); r.style.setProperty('--text-2', theme.text2)
     r.style.setProperty('--border', theme.border); r.style.setProperty('--sidebar-bg', theme.sidebar)
@@ -62,7 +64,7 @@ export default function Shell({ session }) {
     r.style.setProperty('--success-l', theme.dark ? 'rgba(34,197,94,0.15)' : '#e8f9ee')
     r.style.setProperty('--warning-l', theme.dark ? 'rgba(245,158,11,0.15)' : '#fef4e6')
     r.style.setProperty('--error-l', theme.dark ? 'rgba(239,68,68,0.15)' : '#fee8e8')
-  }, [theme, primary, accent, radius])
+  }, [theme, primary, accent, radius, font])
 
   const navigate = useCallback((id, subId) => { setRoute(id); if (subId) setSubjectId(subId); setSidebarOpen(false) }, [])
   const handleSignOut = () => supabase.auth.signOut()
