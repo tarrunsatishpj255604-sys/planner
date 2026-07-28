@@ -3,12 +3,7 @@ import { supabase } from './supabaseClient.js'
 import { levelFromXp } from './helpers.js'
 
 const AppContext = createContext(null)
-
-export function useApp() {
-  const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used within AppProvider')
-  return ctx
-}
+export function useApp() { const ctx = useContext(AppContext); if (!ctx) throw new Error('useApp must be used within AppProvider'); return ctx }
 
 export function AppProvider({ session, children }) {
   const [profile, setProfile] = useState(null)
@@ -86,24 +81,18 @@ export function AppProvider({ session, children }) {
 
   const updateSettings = useCallback(async (updates) => {
     if (!settings) return
-    const merged = { ...settings, ...updates }
-    setSettings(merged)
+    setSettings({ ...settings, ...updates })
     await supabase.from('user_settings').update(updates).eq('user_id', user.id)
   }, [settings, user])
 
   const updateProfile = useCallback(async (updates) => {
     if (!profile) return
-    const merged = { ...profile, ...updates }
-    setProfile(merged)
+    setProfile({ ...profile, ...updates })
     await supabase.from('profiles').update(updates).eq('user_id', user.id)
   }, [profile, user])
 
   return (
-    <AppContext.Provider value={{
-      user, profile, subjects, tasks, notes, flashcards, sessions, exams,
-      achievements, quickNotes, settings, loading,
-      refresh, addXp, unlockAchievement, updateSettings, updateProfile,
-    }}>
+    <AppContext.Provider value={{ user, profile, subjects, tasks, notes, flashcards, sessions, exams, achievements, quickNotes, settings, loading, refresh, addXp, unlockAchievement, updateSettings, updateProfile }}>
       {children}
     </AppContext.Provider>
   )

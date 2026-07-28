@@ -1,26 +1,10 @@
-export function xpForLevel(level) {
-  return Math.floor(100 * Math.pow(level, 1.5))
-}
-
+export function xpForLevel(level) { return Math.floor(100 * Math.pow(level, 1.5)) }
 export function levelFromXp(xp) {
-  let level = 1
-  let remaining = xp
-  while (remaining >= xpForLevel(level)) {
-    remaining -= xpForLevel(level)
-    level++
-  }
+  let level = 1, remaining = xp
+  while (remaining >= xpForLevel(level)) { remaining -= xpForLevel(level); level++ }
   return { level, currentLevelXp: remaining, nextLevelXp: xpForLevel(level), progress: remaining / xpForLevel(level) }
 }
-
-export const XP_REWARDS = {
-  task_complete: 20,
-  task_hard: 35,
-  pomodoro: 15,
-  study_session: 10,
-  daily_login: 5,
-  flashcard_review: 5,
-}
-
+export const XP_REWARDS = { task_complete: 20, task_hard: 35, pomodoro: 15, study_session: 10, daily_login: 5, flashcard_review: 5 }
 export const ACHIEVEMENT_DEFS = [
   { key: 'first_task', title: 'First Steps', desc: 'Complete your first task', icon: '🎯' },
   { key: 'first_session', title: 'Getting Started', desc: 'Complete a study session', icon: '📚' },
@@ -35,60 +19,40 @@ export const ACHIEVEMENT_DEFS = [
   { key: 'level_10', title: 'Legend', desc: 'Reach level 10', icon: '👑' },
   { key: 'pomodoro_10', title: 'Focus Master', desc: 'Complete 10 pomodoros', icon: '🍅' },
 ]
-
 export function formatDate(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const diff = Math.round((d - today) / (1000 * 60 * 60 * 24))
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Tomorrow'
-  if (diff === -1) return 'Yesterday'
-  if (diff < 0) return `${Math.abs(diff)}d overdue`
-  if (diff <= 7) return `In ${diff}d`
+  const d = new Date(dateStr), today = new Date(); today.setHours(0,0,0,0)
+  const diff = Math.round((d - today) / (1000*60*60*24))
+  if (diff === 0) return 'Today'; if (diff === 1) return 'Tomorrow'; if (diff === -1) return 'Yesterday'
+  if (diff < 0) return `${Math.abs(diff)}d overdue`; if (diff <= 7) return `In ${diff}d`
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
-
-export function todayStr() {
-  return new Date().toISOString().split('T')[0]
-}
-
+export function todayStr() { return new Date().toISOString().split('T')[0] }
 export function getStreak(sessions) {
   if (!sessions || sessions.length === 0) return 0
   const dates = [...new Set(sessions.map(s => s.session_date))].sort().reverse()
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  let streak = 0
-  let checkDate = new Date(today)
+  const today = new Date(); today.setHours(0,0,0,0)
+  let streak = 0, checkDate = new Date(today)
   for (const dateStr of dates) {
     const d = new Date(dateStr + 'T00:00:00')
-    if (d.getTime() === checkDate.getTime()) {
-      streak++
-      checkDate.setDate(checkDate.getDate() - 1)
-    } else if (d < checkDate) {
-      break
-    }
+    if (d.getTime() === checkDate.getTime()) { streak++; checkDate.setDate(checkDate.getDate() - 1) }
+    else if (d < checkDate) break
   }
   return streak
 }
-
 export const PRIORITY_CONFIG = {
   high: { label: 'High', color: '#ef4444', bg: '#fee8e8' },
   medium: { label: 'Medium', color: '#f59e0b', bg: '#fef4e6' },
   low: { label: 'Low', color: '#22c55e', bg: '#e8f9ee' },
 }
-
 export const DIFFICULTY_CONFIG = {
   easy: { label: 'Easy', color: '#22c55e', bg: '#e8f9ee', xp: 15 },
   medium: { label: 'Medium', color: '#f59e0b', bg: '#fef4e6', xp: 25 },
   hard: { label: 'Hard', color: '#ef4444', bg: '#fee8e8', xp: 40 },
 }
-
 export const SUBJECT_ICONS = ['📘','🧮','⚗️','🧬','📖','🇮🇳','🇫🇷','💻','🌍','🎨','🎵','🏛️','📐','🔬','✏️','🧪']
 export const SUBJECT_COLORS = ['#4f7cff','#22c55e','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#14b8a6','#f97316','#6366f1']
 export const AVATAR_OPTIONS = ['🦊','🐱','🐼','🦉','🦁','🐸','🐙','🦄','🐯','🐨','🐲','🤖','👻','🌟','🔥','🚀']
-
 export const THEMES = {
   default: { name: 'Default', bg: '#f7f8fc', surface: '#ffffff', text: '#1a1f36', text2: '#5a6378', border: '#e2e6ef', sidebar: '#ffffff', dark: false },
   light: { name: 'Light', bg: '#f9fafb', surface: '#ffffff', text: '#111827', text2: '#6b7280', border: '#e5e7eb', sidebar: '#ffffff', dark: false },

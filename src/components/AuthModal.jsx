@@ -1,26 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import './AuthModal.css'
-
 export default function AuthModal({ open, onClose, mode: initialMode }) {
   const [mode, setMode] = useState(initialMode || 'signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (open) { setMode(initialMode || 'signin'); setError(''); setEmail(''); setPassword('') }
-  }, [open, initialMode])
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    if (open) window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
+  const [email, setEmail] = useState(''), [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false), [error, setError] = useState('')
+  useEffect(() => { if (open) { setMode(initialMode || 'signin'); setError(''); setEmail(''); setPassword('') } }, [open, initialMode])
+  useEffect(() => { const onKey = (e) => { if (e.key === 'Escape') onClose() }; if (open) window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [open, onClose])
   if (!open) return null
-
   const handleSubmit = async (e) => {
     e.preventDefault(); setError('')
     if (!email.trim() || !password) { setError('Please enter your email and password.'); return }
@@ -29,12 +16,10 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
     try {
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
-        if (error) throw error
-        if (data?.user) onClose()
+        if (error) throw error; if (data?.user) onClose()
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        if (error) throw error
-        onClose()
+        if (error) throw error; onClose()
       }
     } catch (err) {
       const msg = err?.message || 'Something went wrong.'
@@ -43,7 +28,6 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
       else setError(msg)
     } finally { setLoading(false) }
   }
-
   return (
     <div className="auth-overlay" onClick={onClose}>
       <div className="auth-card" onClick={(e) => e.stopPropagation()}>

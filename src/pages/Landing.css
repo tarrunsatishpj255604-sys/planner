@@ -23,13 +23,10 @@
 .ps-dot { width: 8px; height: 8px; border-radius: 50%; }
 .preview-main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .pc-card { background: #f0f2f8; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-.pc-row { display: flex; gap: 16px; }
-.pc-card.sm { flex: 1; }
+.pc-row { display: flex; gap: 16px; } .pc-card.sm { flex: 1; }
 .pc-line { height: 10px; border-radius: 5px; background: #e2e6ef; }
-.pc-line.wide { width: 80%; }
-.pc-line.short { width: 40%; }
-.features { padding: 80px 24px; }
-.features-inner { max-width: 1000px; margin: 0 auto; }
+.pc-line.wide { width: 80%; } .pc-line.short { width: 40%; }
+.features { padding: 80px 24px; } .features-inner { max-width: 1000px; margin: 0 auto; }
 .features h2 { text-align: center; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 48px; }
 .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .feature-card { background: #fff; border: 1px solid #e2e6ef; border-radius: 12px; padding: 28px 24px; transition: all 0.2s ease; }

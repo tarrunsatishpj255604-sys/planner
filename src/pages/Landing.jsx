@@ -1,5 +1,4 @@
 import './Landing.css'
-
 export default function Landing({ onSignIn, onSignUp }) {
   return (
     <div className="landing">

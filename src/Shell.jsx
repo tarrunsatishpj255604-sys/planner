@@ -3,7 +3,6 @@ import { supabase } from './lib/supabaseClient.js'
 import { useApp } from './lib/AppContext.jsx'
 import { THEMES } from './lib/helpers.js'
 import './Shell.css'
-
 import Dashboard from './pages/Dashboard.jsx'
 import SubjectList from './pages/SubjectList.jsx'
 import SubjectDetail from './pages/SubjectDetail.jsx'
@@ -47,39 +46,28 @@ export default function Shell({ session }) {
   const primary = settings?.primary_color || '#4f7cff'
   const accent = settings?.accent_color || '#ec4899'
   const radius = settings?.border_radius || 12
-  const animations = settings?.animations_enabled !== false
 
   useEffect(() => {
-    const root = document.documentElement
-    root.style.setProperty('--bg', theme.bg)
-    root.style.setProperty('--surface', theme.surface)
-    root.style.setProperty('--text', theme.text)
-    root.style.setProperty('--text-2', theme.text2)
-    root.style.setProperty('--border', theme.border)
-    root.style.setProperty('--sidebar-bg', theme.sidebar)
-    root.style.setProperty('--primary', primary)
-    root.style.setProperty('--accent', accent)
-    root.style.setProperty('--radius', `${radius}px`)
-    root.style.setProperty('--radius-sm', `${Math.max(radius - 4, 4)}px`)
-    root.style.setProperty('--surface-2', theme.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
-    root.style.setProperty('--primary-l', theme.dark ? 'rgba(79,124,255,0.15)' : 'rgba(79,124,255,0.1)')
-    root.style.setProperty('--shadow-sm', theme.dark ? '0 1px 2px rgba(0,0,0,0.2)' : '0 1px 2px rgba(0,0,0,0.04)')
-    root.style.setProperty('--shadow', theme.dark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)')
-    root.style.setProperty('--shadow-md', theme.dark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.08)')
-    root.style.setProperty('--shadow-lg', theme.dark ? '0 12px 40px rgba(0,0,0,0.5)' : '0 12px 40px rgba(0,0,0,0.12)')
-    root.style.setProperty('--success-l', theme.dark ? 'rgba(34,197,94,0.15)' : '#e8f9ee')
-    root.style.setProperty('--warning-l', theme.dark ? 'rgba(245,158,11,0.15)' : '#fef4e6')
-    root.style.setProperty('--error-l', theme.dark ? 'rgba(239,68,68,0.15)' : '#fee8e8')
+    const r = document.documentElement
+    r.style.setProperty('--bg', theme.bg); r.style.setProperty('--surface', theme.surface)
+    r.style.setProperty('--text', theme.text); r.style.setProperty('--text-2', theme.text2)
+    r.style.setProperty('--border', theme.border); r.style.setProperty('--sidebar-bg', theme.sidebar)
+    r.style.setProperty('--primary', primary); r.style.setProperty('--accent', accent)
+    r.style.setProperty('--radius', `${radius}px`); r.style.setProperty('--radius-sm', `${Math.max(radius - 4, 4)}px`)
+    r.style.setProperty('--surface-2', theme.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
+    r.style.setProperty('--primary-l', theme.dark ? 'rgba(79,124,255,0.15)' : 'rgba(79,124,255,0.1)')
+    r.style.setProperty('--shadow-sm', theme.dark ? '0 1px 2px rgba(0,0,0,0.2)' : '0 1px 2px rgba(0,0,0,0.04)')
+    r.style.setProperty('--shadow', theme.dark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)')
+    r.style.setProperty('--shadow-md', theme.dark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.08)')
+    r.style.setProperty('--shadow-lg', theme.dark ? '0 12px 40px rgba(0,0,0,0.5)' : '0 12px 40px rgba(0,0,0,0.12)')
+    r.style.setProperty('--success-l', theme.dark ? 'rgba(34,197,94,0.15)' : '#e8f9ee')
+    r.style.setProperty('--warning-l', theme.dark ? 'rgba(245,158,11,0.15)' : '#fef4e6')
+    r.style.setProperty('--error-l', theme.dark ? 'rgba(239,68,68,0.15)' : '#fee8e8')
   }, [theme, primary, accent, radius])
 
-  const navigate = useCallback((id, subId) => {
-    setRoute(id); if (subId) setSubjectId(subId); setSidebarOpen(false)
-  }, [])
-
+  const navigate = useCallback((id, subId) => { setRoute(id); if (subId) setSubjectId(subId); setSidebarOpen(false) }, [])
   const handleSignOut = () => supabase.auth.signOut()
-
-  const navLabel = NAV.find(n => n.id === route)?.label
-    || (route === 'subject-detail' ? subjects.find(s => s.id === subjectId)?.name || 'Subject' : 'Dashboard')
+  const navLabel = NAV.find(n => n.id === route)?.label || (route === 'subject-detail' ? subjects.find(s => s.id === subjectId)?.name || 'Subject' : 'Dashboard')
 
   const renderPage = () => {
     switch (route) {
@@ -113,8 +101,7 @@ export default function Shell({ session }) {
         </div>
         <nav className="sidebar-nav">
           {NAV.map((item) => (
-            <button key={item.id} className={`nav-item ${route === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)}
-              style={route === item.id ? { background: 'var(--primary)', color: '#fff' } : {}}>
+            <button key={item.id} className={`nav-item ${route === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)} style={route === item.id ? { background: 'var(--primary)', color: '#fff' } : {}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={item.icon} /></svg>
               <span>{item.label}</span>
             </button>
@@ -123,14 +110,10 @@ export default function Shell({ session }) {
         <div className="sidebar-foot">
           <div className="user-chip" onClick={() => navigate('profile')}>
             <span className="user-avatar" style={{ background: 'var(--primary)' }}>{profile?.avatar_emoji || '?'}</span>
-            <div className="user-info">
-              <span className="user-name">{profile?.username || 'Student'}</span>
-              <span className="user-level">Level {profile?.level || 1}</span>
-            </div>
+            <div className="user-info"><span className="user-name">{profile?.username || 'Student'}</span><span className="user-level">Level {profile?.level || 1}</span></div>
           </div>
           <button className="btn btn-ghost btn-sm signout-btn" onClick={handleSignOut}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-            Sign out
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out
           </button>
         </div>
       </aside>

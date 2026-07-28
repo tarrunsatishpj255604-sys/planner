@@ -1,32 +1,28 @@
-.settings-page { display: flex; flex-direction: column; gap: 16px; animation: slideUp 0.3s ease; }
-
-.settings-theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-.settings-theme-card { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: var(--radius-sm); border: 2px solid transparent; background: var(--surface-2); transition: all var(--transition); }
-.settings-theme-card:hover { background: var(--surface); box-shadow: var(--shadow); }
-.settings-theme-card.selected { border-color: var(--primary); background: var(--primary-l); }
-.settings-theme-preview { height: 70px; border-radius: 8px; display: flex; overflow: hidden; gap: 3px; padding: 4px; }
-.stp-sidebar { width: 24px; border-radius: 4px; flex-shrink: 0; }
-.stp-main { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 4px; }
-.stp-bar { height: 10px; border-radius: 3px; border: 1px solid; }
-.stp-bar.short { width: 60%; }
-.stp-accent { height: 6px; width: 30%; border-radius: 3px; margin-top: auto; }
-.settings-theme-name { font-size: 13px; font-weight: 600; text-align: center; }
-
-.settings-color-input-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; color: var(--text-2); font-weight: 600; }
-.settings-color-input-row input[type="color"] { width: 40px; height: 32px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: transparent; padding: 2px; }
-.settings-color-hex { font-family: monospace; font-size: 12px; color: var(--text-3); }
-
-.settings-font-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background: var(--surface); color: var(--text); }
-.settings-font-select:focus { border-color: var(--primary); }
-
-.settings-slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.settings-slider-row input[type="range"] { flex: 1; accent-color: var(--primary); }
-.settings-slider-val { font-weight: 700; min-width: 40px; text-align: right; }
-.settings-radius-preview { padding: 12px; text-align: center; background: var(--primary-l); color: var(--primary); font-weight: 600; font-size: 14px; border: 1px solid var(--primary); }
-
-.settings-toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; }
-.settings-toggle input { display: none; }
-.settings-toggle-track { width: 44px; height: 24px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); position: relative; transition: background var(--transition); flex-shrink: 0; }
-.settings-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--text-3); transition: all var(--transition); }
-.settings-toggle input:checked + .settings-toggle-track { background: var(--primary); border-color: var(--primary); }
-.settings-toggle input:checked + .settings-toggle-track .settings-toggle-thumb { left: 22px; background: #fff; }
+.settings-page { animation: slideUp 0.3s ease; display: flex; flex-direction: column; gap: 24px; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
+.theme-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; transition: all var(--transition); background: var(--surface); }
+.theme-card:hover { border-color: var(--primary); }
+.theme-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-l); }
+.theme-preview { height: 80px; border-radius: 8px; display: flex; overflow: hidden; gap: 4px; padding: 6px; }
+.tp-sidebar { width: 24px; border-radius: 4px; flex-shrink: 0; }
+.tp-main { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 4px; }
+.tp-bar { height: 10px; border-radius: 3px; }
+.tp-bar.short { width: 60%; }
+.tp-accent { height: 6px; border-radius: 3px; margin-top: auto; }
+.theme-name { font-size: 13px; font-weight: 600; text-align: center; }
+.color-input-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.color-input { width: 48px; height: 48px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; padding: 4px; background: var(--surface); }
+.color-hex { font-size: 14px; font-weight: 600; color: var(--text-2); font-family: monospace; }
+.settings-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); outline: none; font-size: 14px; }
+.settings-select:focus { border-color: var(--primary); }
+.slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.settings-slider { flex: 1; height: 6px; -webkit-appearance: none; appearance: none; background: var(--surface-2); border-radius: 3px; outline: none; }
+.settings-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+.settings-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); cursor: pointer; border: none; }
+.slider-val { font-size: 14px; font-weight: 600; min-width: 40px; }
+.radius-preview { height: 60px; background: var(--primary-l); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--primary); transition: border-radius var(--transition); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 14px; }
+.toggle-switch { width: 48px; height: 28px; border-radius: 14px; background: var(--border); position: relative; transition: background var(--transition); flex-shrink: 0; }
+.toggle-switch.on { background: var(--success); }
+.toggle-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform var(--transition); box-shadow: var(--shadow-sm); }
+.toggle-switch.on .toggle-knob { transform: translateX(20px); }
