@@ -25,7 +25,7 @@ const NAV = [
   { id: 'calendar', label: 'Calendar', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z' },
   { id: 'tasks', label: 'Tasks', icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
   { id: 'subjects', label: 'Subjects', icon: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z' },
-  { id: 'notes', label: 'Notes', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8' },
+  { id: 'notes', label: 'Notes', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
   { id: 'flashcards', label: 'Flashcards', icon: 'M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M7 9h10 M7 13h6' },
   { id: 'focus', label: 'Focus', icon: 'M12 13V9M12 5V3M5 3 2 6M22 6l-3-3M12 21a8 8 0 1 1 0-16 8 8 0 0 1 0 16z' },
   { id: 'analytics', label: 'Analytics', icon: 'M3 3v18h18M7 14l4-4 3 3 5-5' },
@@ -73,15 +73,13 @@ export default function Shell({ session }) {
   }, [theme, primary, accent, radius])
 
   const navigate = useCallback((id, subId) => {
-    setRoute(id)
-    if (subId) setSubjectId(subId)
-    setSidebarOpen(false)
+    setRoute(id); if (subId) setSubjectId(subId); setSidebarOpen(false)
   }, [])
 
   const handleSignOut = () => supabase.auth.signOut()
 
-  const initials = profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'
-  const user = session?.user
+  const navLabel = NAV.find(n => n.id === route)?.label
+    || (route === 'subject-detail' ? subjects.find(s => s.id === subjectId)?.name || 'Subject' : 'Dashboard')
 
   const renderPage = () => {
     switch (route) {
@@ -104,10 +102,8 @@ export default function Shell({ session }) {
     }
   }
 
-  const navLabel = NAV.find(n => n.id === route)?.label || (route === 'subject-detail' ? subjects.find(s => s.id === subjectId)?.name || 'Subject' : 'Dashboard')
-
   return (
-    <div className={`shell ${animations ? 'with-anim' : ''}`}>
+    <div className="shell">
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} style={{ background: 'var(--sidebar-bg)' }}>
         <div className="sidebar-head">
           <span className="brand-icon" style={{ background: 'var(--primary)' }}>
@@ -115,24 +111,18 @@ export default function Shell({ session }) {
           </span>
           <span className="sidebar-title">StudySpace</span>
         </div>
-
         <nav className="sidebar-nav">
           {NAV.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${route === item.id ? 'active' : ''}`}
-              onClick={() => navigate(item.id)}
-              style={route === item.id ? { background: 'var(--primary)', color: '#fff' } : {}}
-            >
+            <button key={item.id} className={`nav-item ${route === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)}
+              style={route === item.id ? { background: 'var(--primary)', color: '#fff' } : {}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={item.icon} /></svg>
               <span>{item.label}</span>
             </button>
           ))}
         </nav>
-
         <div className="sidebar-foot">
           <div className="user-chip" onClick={() => navigate('profile')}>
-            <span className="user-avatar" style={{ background: 'var(--primary)' }}>{profile?.avatar_emoji || initials}</span>
+            <span className="user-avatar" style={{ background: 'var(--primary)' }}>{profile?.avatar_emoji || '?'}</span>
             <div className="user-info">
               <span className="user-name">{profile?.username || 'Student'}</span>
               <span className="user-level">Level {profile?.level || 1}</span>
@@ -144,9 +134,7 @@ export default function Shell({ session }) {
           </button>
         </div>
       </aside>
-
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-
       <main className="shell-main">
         <header className="shell-header">
           <button className="menu-btn" onClick={() => setSidebarOpen(true)}>
@@ -154,9 +142,7 @@ export default function Shell({ session }) {
           </button>
           <h1 className="shell-title">{navLabel}</h1>
         </header>
-        <div className="shell-content" key={route}>
-          {renderPage()}
-        </div>
+        <div className="shell-content" key={route}>{renderPage()}</div>
       </main>
     </div>
   )

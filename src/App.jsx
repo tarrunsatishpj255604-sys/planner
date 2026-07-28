@@ -22,10 +22,7 @@ export default function App() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  const openAuth = (mode) => {
-    setAuthMode(mode)
-    setAuthOpen(true)
-  }
+  const openAuth = (mode) => { setAuthMode(mode); setAuthOpen(true) }
 
   if (loading) {
     return (

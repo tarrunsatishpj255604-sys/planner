@@ -19,7 +19,6 @@ export const XP_REWARDS = {
   study_session: 10,
   daily_login: 5,
   flashcard_review: 5,
-  streak_bonus: 2,
 }
 
 export const ACHIEVEMENT_DEFS = [
@@ -86,14 +85,9 @@ export const DIFFICULTY_CONFIG = {
   hard: { label: 'Hard', color: '#ef4444', bg: '#fee8e8', xp: 40 },
 }
 
-export const SUBJECT_ICONS = ['📘', '🧮', '⚗️', '🧬', '📖', '🇮🇳', '🇫🇷', '💻', '🌍', '🎨', '🎵', '🏛️', '📐', '🔬', '✏️', '🧪']
-
-export const SUBJECT_COLORS = [
-  '#4f7cff', '#22c55e', '#f59e0b', '#ec4899', '#8b5cf6',
-  '#06b6d4', '#ef4444', '#14b8a6', '#f97316', '#6366f1',
-]
-
-export const AVATAR_OPTIONS = ['🦊', '🐱', '🐼', '🦉', '🦁', '🐸', '🐙', '🦄', '🐯', '🐨', '🦊', '🐲', '🤖', '👻', '🌟', '🔥']
+export const SUBJECT_ICONS = ['📘','🧮','⚗️','🧬','📖','🇮🇳','🇫🇷','💻','🌍','🎨','🎵','🏛️','📐','🔬','✏️','🧪']
+export const SUBJECT_COLORS = ['#4f7cff','#22c55e','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#14b8a6','#f97316','#6366f1']
+export const AVATAR_OPTIONS = ['🦊','🐱','🐼','🦉','🦁','🐸','🐙','🦄','🐯','🐨','🐲','🤖','👻','🌟','🔥','🚀']
 
 export const THEMES = {
   default: { name: 'Default', bg: '#f7f8fc', surface: '#ffffff', text: '#1a1f36', text2: '#5a6378', border: '#e2e6ef', sidebar: '#ffffff', dark: false },
@@ -102,8 +96,8 @@ export const THEMES = {
   amoled: { name: 'AMOLED', bg: '#000000', surface: '#0a0a0a', text: '#e4e7ec', text2: '#8b919e', border: '#1a1a1a', sidebar: '#000000', dark: true },
   neon: { name: 'Neon', bg: '#0a0a1a', surface: '#12122a', text: '#00ff9f', text2: '#6666aa', border: '#2a2a4a', sidebar: '#0a0a1a', dark: true },
   cyberpunk: { name: 'Cyberpunk', bg: '#0d0221', surface: '#1a0b3d', text: '#ff006e', text2: '#9d4edd', border: '#3a0ca3', sidebar: '#0d0221', dark: true },
-  ocean: { name: 'Ocean Blue', bg: '#e6f0fa', surface: '#ffffff', text: '#0a3d62', text2: '#3c6382', border: '#b3d9f2', sidebar: '#d4e9f7', dark: false },
-  matrix: { name: 'Green Matrix', bg: '#000800', surface: '#001a00', text: '#00ff00', text2: '#008800', border: '#003300', sidebar: '#000800', dark: true },
+  ocean: { name: 'Ocean', bg: '#e6f0fa', surface: '#ffffff', text: '#0a3d62', text2: '#3c6382', border: '#b3d9f2', sidebar: '#d4e9f7', dark: false },
+  matrix: { name: 'Matrix', bg: '#000800', surface: '#001a00', text: '#00ff00', text2: '#008800', border: '#003300', sidebar: '#000800', dark: true },
   glass: { name: 'Glass', bg: '#e8ecf4', surface: '#ffffff', text: '#1a1f36', text2: '#5a6378', border: '#d0d8e8', sidebar: '#ffffff', dark: false },
   minimal: { name: 'Minimal', bg: '#fafafa', surface: '#ffffff', text: '#1a1a1a', text2: '#999999', border: '#eaeaea', sidebar: '#ffffff', dark: false },
 }

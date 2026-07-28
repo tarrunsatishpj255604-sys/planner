@@ -1,255 +1,240 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
-import { levelFromXp, getStreak, formatDate, PRIORITY_CONFIG, todayStr } from '../lib/helpers.js'
+import { levelFromXp, getStreak, formatDate, todayStr, XP_REWARDS } from '../lib/helpers.js'
 import './Dashboard.css'
 
 export default function Dashboard({ onNavigate }) {
-  const { profile, subjects, tasks, sessions, exams, quickNotes, refresh, addXp } = useApp()
+  const { user, profile, subjects, tasks, sessions, exams, quickNotes, refresh, addXp } = useApp()
   const [quote, setQuote] = useState(null)
-  const [quickNote, setQuickNote] = useState('')
-
-  useEffect(() => {
-    supabase.from('motivational_quotes').select('*').then(({ data }) => {
-      if (data && data.length) setQuote(data[Math.floor(Math.random() * data.length)])
-    })
-  }, [])
+  const [qnText, setQnText] = useState('')
+  const [qnBusy, setQnBusy] = useState(false)
 
   const today = todayStr()
-  const todayTasks = tasks.filter(t => !t.completed && !t.archived && t.due_date === today)
-  const upcomingExams = exams.filter(e => new Date(e.exam_date) >= new Date(today)).slice(0, 3)
   const streak = getStreak(sessions)
   const { level, currentLevelXp, nextLevelXp, progress } = levelFromXp(profile?.xp || 0)
 
-  const todayMinutes = sessions.filter(s => s.session_date === today).reduce((sum, s) => sum + s.duration_minutes, 0)
+  const studiedToday = useMemo(() => {
+    return sessions.filter(s => s.session_date === today).reduce((sum, s) => sum + (s.duration || 0), 0)
+  }, [sessions, today])
+
+  const todayTasks = useMemo(() => {
+    return tasks.filter(t => !t.archived && t.due_date === today)
+  }, [tasks, today])
+
+  const tasksDoneToday = useMemo(() => todayTasks.filter(t => t.completed).length, [todayTasks])
   const dailyGoal = profile?.daily_goal_minutes || 120
-  const goalPct = Math.min((todayMinutes / dailyGoal) * 100, 100)
+  const goalPct = Math.min(100, Math.round((studiedToday / dailyGoal) * 100))
 
-  const weekDays = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const ds = d.toISOString().split('T')[0]
-    const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + s.duration_minutes, 0)
-    weekDays.push({ date: d, mins, label: d.toLocaleDateString('en-US', { weekday: 'short' }) })
-  }
-  const maxWeekMin = Math.max(...weekDays.map(d => d.mins), 1)
+  const upcomingExams = useMemo(() => {
+    return exams.filter(e => e.exam_date >= today).slice(0, 4)
+  }, [exams, today])
 
-  const toggleTask = async (t) => {
-    await supabase.from('tasks').update({ completed: !t.completed }).eq('id', t.id)
-    if (!t.completed) {
-      const xp = t.difficulty === 'hard' ? 40 : t.difficulty === 'medium' ? 25 : 15
-      await addXp(xp)
+  const weeklyData = useMemo(() => {
+    const days = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + (s.duration || 0), 0)
+      days.push({ date: ds, mins, label: d.toLocaleDateString('en-US', { weekday: 'short' }) })
     }
+    return days
+  }, [sessions])
+
+  const maxWeekly = Math.max(60, ...weeklyData.map(d => d.mins))
+
+  useEffect(() => {
+    let active = true
+    supabase.from('motivational_quotes').select('*').then(({ data }) => {
+      if (active && data && data.length) {
+        setQuote(data[Math.floor(Math.random() * data.length)])
+      }
+    })
+    return () => { active = false }
+  }, [])
+
+  const toggleTask = async (task) => {
+    const completed = !task.completed
+    await supabase.from('tasks').update({ completed }).eq('id', task.id)
+    if (completed) await addXp(XP_REWARDS.task_complete)
     refresh()
   }
 
   const addQuickNote = async () => {
-    if (!quickNote.trim()) return
-    await supabase.from('quick_notes').insert({ content: quickNote.trim() })
-    setQuickNote('')
+    if (!qnText.trim() || qnBusy) return
+    setQnBusy(true)
+    const { data } = await supabase.from('quick_notes').insert({ user_id: user.id, content: qnText.trim() }).select().single()
+    if (data) setQnText('')
+    setQnBusy(false)
     refresh()
   }
 
-  const delQuickNote = async (id) => {
+  const deleteQuickNote = async (id) => {
     await supabase.from('quick_notes').delete().eq('id', id)
     refresh()
   }
 
+  if (!profile) return <div className="spinner" />
+
   return (
     <div className="dashboard">
-      <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
-        <div className="wb-text">
-          <h2>Hey {profile?.username || 'there'}!</h2>
-          <p>{todayTasks.length > 0 ? `You have ${todayTasks.length} task${todayTasks.length > 1 ? 's' : ''} due today.` : 'No tasks due today — great progress!'}</p>
+      <div className="welcome-banner">
+        <div className="welcome-bg" />
+        <div className="welcome-content">
+          <h1>Hey, {profile.username} 👋</h1>
+          <p>{streak > 0 ? `You're on a ${streak}-day streak. Keep it going!` : 'Ready to start a new streak today?'}</p>
         </div>
-        <div className="wb-streak">
+        <div className="welcome-streak">
           <span className="streak-icon">🔥</span>
-          <div>
-            <span className="streak-num">{streak}</span>
-            <span className="streak-label">day streak</span>
+          <span className="streak-num">{streak}</span>
+          <span className="streak-label">day streak</span>
+        </div>
+      </div>
+
+      <div className="grid-4 stat-cards">
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8efff', color: '#4f7cff' }}>⏱️</div>
+          <div className="stat-body">
+            <span className="stat-value">{Math.floor(studiedToday / 60)}h {studiedToday % 60}m</span>
+            <span className="stat-label">Studied today</span>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8f9ee', color: '#22c55e' }}>✅</div>
+          <div className="stat-body">
+            <span className="stat-value">{tasksDoneToday}/{todayTasks.length}</span>
+            <span className="stat-label">Tasks done</span>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fef4e6', color: '#f59e0b' }}>📚</div>
+          <div className="stat-body">
+            <span className="stat-value">{subjects.length}</span>
+            <span className="stat-label">Subjects</span>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fce7f3', color: '#ec4899' }}>⭐</div>
+          <div className="stat-body">
+            <span className="stat-value">Level {level}</span>
+            <span className="stat-label">{currentLevelXp}/{nextLevelXp} XP</span>
           </div>
         </div>
       </div>
 
       <div className="dash-grid">
-        <div className="card stat-mini">
-          <div className="sm-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 13V9M12 5V3M5 3 2 6M22 6l-3-3M12 21a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" /></svg>
+        <div className="card dash-tasks">
+          <div className="card-head">
+            <h3>Today's Tasks</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('tasks')}>View all</button>
           </div>
-          <div>
-            <span className="sm-val">{todayMinutes}m</span>
-            <span className="sm-label">Studied today</span>
-          </div>
-        </div>
-        <div className="card stat-mini">
-          <div className="sm-icon" style={{ background: 'var(--success-l)', color: 'var(--success)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-          </div>
-          <div>
-            <span className="sm-val">{tasks.filter(t => t.completed).length}</span>
-            <span className="sm-label">Tasks done</span>
-          </div>
-        </div>
-        <div className="card stat-mini">
-          <div className="sm-icon" style={{ background: 'var(--warning-l)', color: 'var(--warning)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
-          </div>
-          <div>
-            <span className="sm-val">{subjects.length}</span>
-            <span className="sm-label">Subjects</span>
-          </div>
-        </div>
-        <div className="card stat-mini">
-          <div className="sm-icon" style={{ background: '#fce7f3', color: 'var(--accent)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
-          </div>
-          <div>
-            <span className="sm-val">Lv {level}</span>
-            <span className="sm-label">{currentLevelXp}/{nextLevelXp} XP</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="dash-cols">
-        <div className="dash-left">
-          <div className="card">
-            <div className="card-head">
-              <h3>Today's Tasks</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('tasks')}>View all</button>
-            </div>
-            {todayTasks.length === 0 ? (
-              <p className="dash-empty">No tasks due today. You're all caught up!</p>
-            ) : (
-              <div className="dash-task-list">
-                {todayTasks.map(t => {
-                  const pc = PRIORITY_CONFIG[t.priority] || PRIORITY_CONFIG.medium
-                  return (
-                    <div key={t.id} className="dash-task">
-                      <button className="task-check" onClick={() => toggleTask(t)} />
-                      <div className="dash-task-info">
-                        <span className="dash-task-title">{t.title}</span>
-                        {t.subject && <span className="dash-task-sub" style={{ color: t.subject.color }}>{t.subject.name}</span>}
-                      </div>
-                      <span className="dash-task-pri" style={{ background: pc.bg, color: pc.color }}>{pc.label}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="card">
-            <div className="card-head"><h3>Daily Goal</h3></div>
-            <div className="daily-goal">
-              <div className="dg-ring-wrap">
-                <svg viewBox="0 0 120 120" className="dg-ring">
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-2)" strokeWidth="10" />
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--primary)" strokeWidth="10" strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 52}
-                    strokeDashoffset={2 * Math.PI * 52 * (1 - goalPct / 100)}
-                    transform="rotate(-90 60 60)"
-                    style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-                  />
-                </svg>
-                <div className="dg-center">
-                  <span className="dg-pct">{Math.round(goalPct)}%</span>
-                  <span className="dg-sub">{todayMinutes}m / {dailyGoal}m</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head"><h3>Quick Notes</h3></div>
-            <div className="qn-input-row">
-              <input
-                type="text"
-                value={quickNote}
-                onChange={e => setQuickNote(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addQuickNote()}
-                placeholder="Jot something down…"
-                className="qn-input"
-              />
-              <button className="btn btn-primary btn-sm" onClick={addQuickNote}>Add</button>
-            </div>
-            <div className="qn-list">
-              {quickNotes.map(n => (
-                <div key={n.id} className="qn-item">
-                  <span>{n.content}</span>
-                  <button className="qn-del" onClick={() => delQuickNote(n.id)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          {todayTasks.length === 0 ? (
+            <div className="dash-empty">No tasks due today. Enjoy your day! 🌿</div>
+          ) : (
+            <ul className="today-task-list">
+              {todayTasks.map(t => (
+                <li key={t.id} className="today-task-item">
+                  <button className={`task-check ${t.completed ? 'checked' : ''}`} onClick={() => toggleTask(t)}>
+                    {t.completed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </button>
-                </div>
+                  <span className={`today-task-title ${t.completed ? 'done' : ''}`}>{t.title}</span>
+                  {t.subject && <span className="task-subject-chip" style={{ background: t.subject.color + '22', color: t.subject.color }}>{t.subject.icon} {t.subject.name}</span>}
+                </li>
               ))}
-              {quickNotes.length === 0 && <p className="dash-empty">No quick notes yet.</p>}
-            </div>
-          </div>
+            </ul>
+          )}
         </div>
 
-        <div className="dash-right">
-          <div className="card xp-card">
-            <div className="card-head"><h3>XP & Level</h3></div>
-            <div className="xp-info">
-              <span className="xp-level-badge" style={{ background: 'var(--primary)' }}>Lv {level}</span>
-              <div className="xp-bar-wrap">
-                <div className="xp-bar">
-                  <div className="xp-bar-fill" style={{ width: `${progress * 100}%`, background: 'var(--primary)' }} />
-                </div>
-                <span className="xp-text">{currentLevelXp} / {nextLevelXp} XP</span>
-              </div>
+        <div className="card dash-goal">
+          <div className="card-head"><h3>Daily Goal</h3></div>
+          <div className="goal-ring-wrap">
+            <svg className="goal-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-2)" strokeWidth="10" />
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--primary)" strokeWidth="10" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * (1 - goalPct / 100)}
+                transform="rotate(-90 60 60)" />
+            </svg>
+            <div className="goal-ring-text">
+              <span className="goal-pct">{goalPct}%</span>
+              <span className="goal-sub">{Math.floor(studiedToday / 60)}h {studiedToday % 60}m / {Math.floor(dailyGoal / 60)}h</span>
             </div>
           </div>
-
-          <div className="card">
-            <div className="card-head"><h3>This Week</h3></div>
-            <div className="week-chart">
-              {weekDays.map((d, i) => (
-                <div key={i} className="week-bar-col">
-                  <div className="week-bar-track">
-                    <div className="week-bar-fill" style={{ height: `${(d.mins / maxWeekMin) * 100}%`, background: d.mins > 0 ? 'var(--primary)' : 'var(--surface-2)' }} />
-                  </div>
-                  <span className="week-bar-label">{d.label[0]}</span>
-                  <span className="week-bar-mins">{d.mins > 0 ? `${d.mins}m` : ''}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head"><h3>Upcoming Exams</h3></div>
-            {upcomingExams.length === 0 ? (
-              <p className="dash-empty">No upcoming exams.</p>
-            ) : (
-              <div className="exam-list">
-                {upcomingExams.map(e => (
-                  <div key={e.id} className="exam-item">
-                    <span className="exam-dot" style={{ background: e.subject?.color || 'var(--primary)' }} />
-                    <div className="exam-info">
-                      <span className="exam-title">{e.title}</span>
-                      <span className="exam-date">{formatDate(e.exam_date)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {quote && (
-            <div className="card quote-card" style={{ background: 'linear-gradient(135deg, var(--primary-l), var(--surface))' }}>
-              <p className="quote-text">"{quote.quote}"</p>
-              <span className="quote-author">— {quote.author}</span>
-            </div>
-          )}
-
-          <button className="card focus-quick" onClick={() => onNavigate('focus')}>
-            <span className="fq-icon">🍅</span>
-            <div>
-              <span className="fq-title">Start Focus Session</span>
-              <span className="fq-sub">Pomodoro · Stopwatch · Countdown</span>
-            </div>
+          <button className="btn btn-primary focus-shortcut" onClick={() => onNavigate('focus')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 13V9M12 5V3M5 3 2 6M22 6l-3-3M12 21a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" /></svg>
+            Start Focus Session
           </button>
         </div>
+
+        <div className="card dash-quicknotes">
+          <div className="card-head"><h3>Quick Notes</h3></div>
+          <div className="qn-input-row">
+            <input className="qn-input" placeholder="Jot a quick note..." value={qnText}
+              onChange={(e) => setQnText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addQuickNote()} />
+            <button className="btn btn-primary btn-sm" onClick={addQuickNote} disabled={qnBusy}>Add</button>
+          </div>
+          <ul className="qn-list">
+            {quickNotes.length === 0 && <li className="dash-empty">No quick notes yet.</li>}
+            {quickNotes.map(qn => (
+              <li key={qn.id} className="qn-item">
+                <span className="qn-text">{qn.content}</span>
+                <button className="qn-delete" onClick={() => deleteQuickNote(qn.id)}>×</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="card dash-xp">
+          <div className="card-head"><h3>XP & Level</h3></div>
+          <div className="xp-badge-row">
+            <span className="xp-level-badge">Lv {level}</span>
+            <div className="xp-bar-wrap">
+              <div className="xp-bar" style={{ width: `${progress * 100}%` }} />
+            </div>
+            <span className="xp-text">{currentLevelXp}/{nextLevelXp}</span>
+          </div>
+          <p className="xp-hint">{nextLevelXp - currentLevelXp} XP to level {level + 1}</p>
+        </div>
+
+        <div className="card dash-weekly">
+          <div className="card-head"><h3>This Week</h3></div>
+          <div className="weekly-chart">
+            {weeklyData.map((d, i) => (
+              <div key={i} className="weekly-bar-col">
+                <div className="weekly-bar-track">
+                  <div className="weekly-bar" style={{ height: `${(d.mins / maxWeekly) * 100}%` }} title={`${d.mins} min`} />
+                </div>
+                <span className="weekly-bar-label">{d.label[0]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card dash-exams">
+          <div className="card-head"><h3>Upcoming Exams</h3></div>
+          {upcomingExams.length === 0 ? (
+            <div className="dash-empty">No upcoming exams. 🎉</div>
+          ) : (
+            <ul className="exam-list">
+              {upcomingExams.map(e => (
+                <li key={e.id} className="exam-item">
+                  <span className="exam-dot" style={{ background: e.subject?.color || '#999' }} />
+                  <span className="exam-title">{e.title}</span>
+                  <span className="exam-date">{formatDate(e.exam_date)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {quote && (
+          <div className="card dash-quote">
+            <div className="quote-mark">"</div>
+            <p className="quote-text">{quote.text || quote.quote}</p>
+            {quote.author && <span className="quote-author">— {quote.author}</span>}
+          </div>
+        )}
       </div>
     </div>
   )

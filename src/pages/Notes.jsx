@@ -1,172 +1,155 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
+import { formatDate } from '../lib/helpers.js'
 import './NotesPage.css'
 
 export default function Notes() {
-  const { notes, subjects, refresh } = useApp()
-  const [selected, setSelected] = useState(null)
+  const { user, notes, subjects, refresh } = useApp()
+  const [selectedId, setSelectedId] = useState(null)
+  const [search, setSearch] = useState('')
+  const [folder, setFolder] = useState('all')
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [folder, setFolder] = useState('General')
+  const [noteFolder, setNoteFolder] = useState('')
   const [subjectId, setSubjectId] = useState('')
   const [tags, setTags] = useState('')
-  const [search, setSearch] = useState('')
-  const [filterFolder, setFilterFolder] = useState('all')
-  const [saving, setSaving] = useState(false)
-  const [showNew, setShowNew] = useState(false)
+  const [content, setContent] = useState('')
+  const [busy, setBusy] = useState(false)
   const saveTimer = useRef(null)
 
-  const folders = [...new Set(notes.map(n => n.folder))]
+  const folders = useMemo(() => {
+    const set = new Set(notes.map(n => n.folder).filter(Boolean))
+    return ['all', ...Array.from(set)]
+  }, [notes])
 
-  const filtered = notes.filter(n => {
-    if (filterFolder !== 'all' && n.folder !== filterFolder) return false
-    if (search && !n.title.toLowerCase().includes(search.toLowerCase()) && !n.content.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  }).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.updated_at) - new Date(a.updated_at))
-
-  const startNew = () => {
-    setSelected(null); setTitle(''); setContent(''); setFolder('General')
-    setSubjectId(''); setTags(''); setShowNew(true)
-  }
-
-  const startEdit = (n) => {
-    setSelected(n); setTitle(n.title); setContent(n.content); setFolder(n.folder)
-    setSubjectId(n.subject_id || ''); setTags((n.tags || []).join(', ')); setShowNew(false)
-  }
-
-  const save = useCallback(async (noteData) => {
-    if (!noteData.title.trim() && !noteData.content.trim()) return
-    setSaving(true)
-    const tagArr = noteData.tags ? noteData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-    const payload = {
-      title: noteData.title.trim() || 'Untitled', content: noteData.content,
-      folder: noteData.folder, subject_id: noteData.subjectId || null,
-      tags: tagArr, updated_at: new Date().toISOString(),
+  const filtered = useMemo(() => {
+    let list = [...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.updated_at) - new Date(a.updated_at))
+    if (folder !== 'all') list = list.filter(n => n.folder === folder)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(n => (n.title || '').toLowerCase().includes(q) || (n.content || '').toLowerCase().includes(q))
     }
-    if (noteData.selected) {
-      await supabase.from('notes').update(payload).eq('id', noteData.selected.id)
-    } else {
-      const { data } = await supabase.from('notes').insert({ ...payload, user_id: undefined }).select().single()
-      if (data) setSelected(data)
-    }
-    setSaving(false)
-    refresh()
-  }, [refresh])
+    return list
+  }, [notes, folder, search])
 
-  const autoSave = useCallback(() => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      save({ selected, title, content, folder, subjectId, tags })
-    }, 1500)
-  }, [selected, title, content, folder, subjectId, tags, save])
+  const selected = notes.find(n => n.id === selectedId)
 
   useEffect(() => {
-    if (selected !== null && (title || content)) autoSave()
-  }, [title, content, selected, autoSave])
+    if (selected) {
+      setTitle(selected.title || '')
+      setNoteFolder(selected.folder || '')
+      setSubjectId(selected.subject_id || '')
+      setTags((selected.tags || []).join(', '))
+      setContent(selected.content || '')
+    }
+  }, [selectedId, selected?.updated_at])
 
-  const handleNew = async () => {
-    if (!title.trim() && !content.trim()) return
-    setSaving(true)
-    const tagArr = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []
+  const newNote = async () => {
+    setBusy(true)
     const { data } = await supabase.from('notes').insert({
-      title: title.trim() || 'Untitled', content, folder,
-      subject_id: subjectId || null, tags: tagArr,
+      user_id: user.id, title: 'Untitled', content: '', folder: null, subject_id: null, tags: [],
     }).select().single()
-    setSaving(false); setShowNew(false); refresh()
-    if (data) startEdit(data)
+    if (data) { refresh(); setSelectedId(data.id) }
+    setBusy(false)
   }
 
-  const togglePin = async (n) => {
-    await supabase.from('notes').update({ pinned: !n.pinned }).eq('id', n.id); refresh()
+  const save = async (id, patch) => {
+    await supabase.from('notes').update(patch).eq('id', id)
+    refresh()
   }
 
-  const toggleFav = async (n) => {
-    await supabase.from('notes').update({ favorite: !n.favorite }).eq('id', n.id); refresh()
+  const debouncedSave = (id, patch) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => save(id, patch), 1500)
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this note?')) return
+  const onField = (setter, field) => (e) => {
+    const val = e.target.value
+    setter(val)
+    if (selectedId) {
+      const patch = { [field]: field === 'tags' ? val.split(',').map(t => t.trim()).filter(Boolean) : val, updated_at: new Date().toISOString() }
+      debouncedSave(selectedId, patch)
+    }
+  }
+
+  const togglePin = async (n) => { await supabase.from('notes').update({ pinned: !n.pinned }).eq('id', n.id); refresh() }
+  const toggleFav = async (n) => { await supabase.from('notes').update({ favorited: !n.favorited }).eq('id', n.id); refresh() }
+  const remove = async (id) => {
     await supabase.from('notes').delete().eq('id', id)
-    if (selected?.id === id) { setSelected(null); setTitle(''); setContent('') }
+    if (selectedId === id) setSelectedId(null)
     refresh()
   }
 
   return (
     <div className="notes-page">
-      <div className="notes-sidebar">
-        <div className="ns-toolbar">
-          <input type="text" placeholder="Search notes…" value={search} onChange={e => setSearch(e.target.value)} className="ns-search" />
-          <button className="btn btn-primary btn-sm" onClick={startNew}>+ New</button>
-        </div>
-        <div className="ns-folders">
-          <button className={`ns-folder ${filterFolder === 'all' ? 'active' : ''}`} onClick={() => setFilterFolder('all')}>All Notes ({notes.length})</button>
-          {folders.map(f => (
-            <button key={f} className={`ns-folder ${filterFolder === f ? 'active' : ''}`} onClick={() => setFilterFolder(f)}>{f} ({notes.filter(n => n.folder === f).length})</button>
-          ))}
-        </div>
-        <div className="ns-list">
-          {filtered.length === 0 ? (
-            <p className="dash-empty">No notes found. Create one!</p>
-          ) : filtered.map(n => (
-            <div key={n.id} className={`ns-item ${selected?.id === n.id ? 'active' : ''}`} onClick={() => startEdit(n)}>
-              {n.pinned && <span className="ns-pin">📌</span>}
-              <span className="ns-item-title">{n.title}</span>
-              <span className="ns-item-preview">{n.content.substring(0, 60)}</span>
-              <span className="ns-item-meta">{n.folder} · {new Date(n.updated_at).toLocaleDateString()}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="notes-editor">
-        {showNew ? (
-          <>
-            <div className="ne-head">
-              <input type="text" placeholder="Note title" value={title} onChange={e => setTitle(e.target.value)} className="ne-title" autoFocus />
-              <button className="btn btn-primary btn-sm" onClick={handleNew} disabled={saving}>{saving ? 'Saving…' : 'Create'}</button>
-            </div>
-            <div className="ne-meta">
-              <input type="text" placeholder="Folder" value={folder} onChange={e => setFolder(e.target.value)} className="ne-meta-input" />
-              <select value={subjectId} onChange={e => setSubjectId(e.target.value)} className="ne-meta-input">
-                <option value="">No subject</option>
-                {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-              </select>
-              <input type="text" placeholder="Tags (comma separated)" value={tags} onChange={e => setTags(e.target.value)} className="ne-meta-input" />
-            </div>
-            <textarea placeholder="Start writing… (Markdown supported)" value={content} onChange={e => setContent(e.target.value)} className="ne-content" />
-          </>
-        ) : selected ? (
-          <>
-            <div className="ne-head">
-              <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="ne-title" />
-              <div className="ne-actions">
-                <button className="btn btn-ghost btn-sm" onClick={() => togglePin(selected)} title="Pin">{selected.pinned ? '📌' : '📍'}</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => toggleFav(selected)} title="Favorite">{selected.favorite ? '⭐' : '☆'}</button>
-                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--error)' }} onClick={() => handleDelete(selected.id)}>Delete</button>
-                {saving && <span className="ne-saving">Saving…</span>}
-              </div>
-            </div>
-            <div className="ne-meta">
-              <input type="text" value={folder} onChange={e => setFolder(e.target.value)} className="ne-meta-input" />
-              <select value={subjectId} onChange={e => setSubjectId(e.target.value)} className="ne-meta-input">
-                <option value="">No subject</option>
-                {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-              </select>
-              <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags" className="ne-meta-input" />
-            </div>
-            <textarea value={content} onChange={e => setContent(e.target.value)} className="ne-content" />
-          </>
-        ) : (
-          <div className="ne-empty">
-            <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
-            </div>
-            <h3>Select or create a note</h3>
-            <p>Click a note on the left to edit it, or create a new one.</p>
-            <button className="btn btn-primary" onClick={startNew}>+ New Note</button>
+      <div className="notes-layout">
+        <aside className="notes-sidebar">
+          <div className="notes-toolbar">
+            <button className="btn btn-primary notes-new" onClick={newNote} disabled={busy}>+ New Note</button>
+            <input className="notes-search" placeholder="🔍 Search notes..." value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-        )}
+          <div className="notes-folders">
+            {folders.map(f => (
+              <button key={f} className={`notes-folder ${folder === f ? 'active' : ''}`} onClick={() => setFolder(f)}>
+                {f === 'all' ? '📁 All Notes' : `📁 ${f}`}
+              </button>
+            ))}
+          </div>
+          <div className="notes-list">
+            {filtered.length === 0 && <p className="dash-empty">No notes found.</p>}
+            {filtered.map(n => (
+              <button key={n.id} className={`notes-list-item ${selectedId === n.id ? 'active' : ''}`} onClick={() => setSelectedId(n.id)}>
+                {n.pinned && <span className="notes-pin">📌</span>}
+                <div className="notes-item-body">
+                  <span className="notes-item-title">{n.title || 'Untitled'}</span>
+                  <span className="notes-item-preview">{(n.content || '').slice(0, 60) || 'No content'}</span>
+                  <span className="notes-item-meta">
+                    {n.folder && <span>{n.folder}</span>}
+                    <span>{formatDate(n.updated_at?.split('T')[0] || n.created_at?.split('T')[0])}</span>
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="notes-editor">
+          {selected ? (
+            <>
+              <div className="notes-editor-head">
+                <input className="notes-title-input" placeholder="Note title" value={title} onChange={onField(setTitle, 'title')} />
+                <div className="notes-editor-actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => togglePin(selected)} title="Pin">
+                    {selected.pinned ? '📌' : '📍'}
+                  </button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => toggleFav(selected)} title="Favorite">
+                    {selected.favorited ? '⭐' : '☆'}
+                  </button>
+                  <button className="btn btn-ghost btn-sm danger" onClick={() => remove(selected.id)} title="Delete">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div className="notes-editor-meta">
+                <input className="notes-folder-input" placeholder="Folder" value={noteFolder} onChange={onField(setNoteFolder, 'folder')} />
+                <select className="notes-subject-select" value={subjectId} onChange={onField(setSubjectId, 'subject_id')}>
+                  <option value="">No subject</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
+                </select>
+                <input className="notes-tags-input" placeholder="Tags (comma separated)" value={tags} onChange={onField(setTags, 'tags')} />
+              </div>
+              <textarea className="notes-content" placeholder="Start writing..." value={content} onChange={onField(setContent, 'content')} />
+              <span className="notes-save-hint">Auto-saves as you type</span>
+            </>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon" style={{ background: '#f3e8ff', color: '#8b5cf6' }}>📝</div>
+              <h3>Select a note</h3>
+              <p>Choose a note from the sidebar or create a new one.</p>
+              <button className="btn btn-primary" onClick={newNote}>+ New Note</button>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

@@ -1,65 +1,38 @@
-.focus-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 24px; }
-.focus-page.fullscreen { position: fixed; inset: 0; z-index: 999; background: var(--bg); padding: 40px; align-items: center; justify-content: center; }
+.focus-page { animation: slideUp 0.3s ease; }
 
-.focus-modes { display: flex; gap: 8px; }
-.focus-mode-btn {
-  padding: 8px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
-  color: var(--text-2); background: var(--surface); border: 1px solid var(--border);
-  transition: all var(--transition);
-}
-.focus-mode-btn:hover { background: var(--surface-2); }
-.focus-mode-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.focus-main { display: flex; flex-direction: column; align-items: center; gap: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
 
-.focus-main {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 28px;
-}
+.focus-modes { display: flex; gap: 8px; background: var(--surface-2); padding: 4px; border-radius: 10px; }
+.focus-mode-btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-2); transition: all var(--transition); }
+.focus-mode-btn:hover { color: var(--text); }
+.focus-mode-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
 
-.focus-ring-wrap { position: relative; width: 240px; height: 240px; }
+.focus-ring-wrap { position: relative; width: 280px; height: 280px; margin: 8px 0; }
 .focus-ring { width: 100%; height: 100%; }
-.focus-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-.focus-time { font-size: 42px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.focus-subject { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.focus-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.focus-time { font-size: 48px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+.focus-mode-label { font-size: 13px; color: var(--text-2); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
-.focus-controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.focus-btn { padding: 12px 24px; font-size: 14px; }
-.save-btn { background: var(--success); color: #fff; }
-.save-btn:hover { filter: brightness(0.92); }
+.focus-presets { display: flex; gap: 8px; }
+.focus-preset { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; background: var(--surface-2); color: var(--text-2); transition: all var(--transition); }
+.focus-preset:hover { color: var(--text); }
+.focus-preset.active { background: var(--primary); color: #fff; }
 
-.focus-presets { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-.preset-chip {
-  padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
-  color: var(--text-2); background: var(--surface-2); border: 1px solid transparent;
-  transition: all var(--transition);
-}
-.preset-chip:hover { background: var(--border); }
-.preset-chip.active { background: var(--primary); color: #fff; }
+.focus-controls { display: flex; gap: 10px; align-items: center; }
+.focus-start { min-width: 120px; font-size: 15px; padding: 12px 24px; }
 
-.focus-ambient { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.fa-label { font-size: 13px; color: var(--text-2); font-weight: 600; }
-.ambient-chip {
-  padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
-  color: var(--text-2); background: var(--surface-2); transition: all var(--transition);
-}
-.ambient-chip:hover { background: var(--border); }
-.ambient-chip.active { background: var(--primary); color: #fff; }
+.focus-options { display: flex; gap: 16px; width: 100%; max-width: 500px; }
+.focus-options .form-field { flex: 1; }
 
-.focus-config { display: flex; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-.focus-config .form-field { flex: 1; }
+.focus-sounds { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.focus-sounds-label { font-size: 13px; color: var(--text-2); font-weight: 600; }
 
-.focus-today { }
-.ft-total { font-size: 18px; font-weight: 800; color: var(--primary); }
-.ft-list { display: flex; flex-direction: column; gap: 8px; }
-.ft-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
-.ft-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.ft-subject { font-size: 14px; font-weight: 600; }
-.ft-type { font-size: 12px; color: var(--text-2); text-transform: uppercase; }
-.ft-notes { font-size: 13px; color: var(--text-2); flex: 1; font-style: italic; }
-.ft-mins { font-size: 14px; font-weight: 700; margin-left: auto; }
+.focus-sessions { margin-top: 20px; }
+.focus-session-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.focus-session-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 14px; }
+.fs-mode { font-weight: 700; text-transform: capitalize; min-width: 80px; }
+.fs-dur { color: var(--primary); font-weight: 600; min-width: 40px; }
+.fs-subject { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.fs-notes { color: var(--text-2); flex: 1; }
 
-@media (max-width: 768px) {
-  .focus-main { padding: 28px 16px; }
-  .focus-ring-wrap { width: 200px; height: 200px; }
-  .focus-time { font-size: 36px; }
-  .focus-config { flex-direction: column; gap: 12px; }
-}
+.focus-page:fullscreen { background: var(--bg); padding: 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }

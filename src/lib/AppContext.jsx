@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { supabase } from './supabaseClient.js'
-import { levelFromXp, XP_REWARDS, ACHIEVEMENT_DEFS } from './helpers.js'
+import { levelFromXp } from './helpers.js'
 
 const AppContext = createContext(null)
 
@@ -22,36 +22,23 @@ export function AppProvider({ session, children }) {
   const [quickNotes, setQuickNotes] = useState([])
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
-
   const user = session?.user
 
   const ensureProfile = useCallback(async () => {
     if (!user) return
     const { data: existing } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle()
-    if (existing) {
-      setProfile(existing)
-      return existing
-    }
+    if (existing) { setProfile(existing); return existing }
     const username = user.email?.split('@')[0] || 'Student'
     const { data, error } = await supabase.from('profiles').insert({ user_id: user.id, username }).select().single()
-    if (!error && data) {
-      setProfile(data)
-      return data
-    }
+    if (!error && data) { setProfile(data); return data }
   }, [user])
 
   const ensureSettings = useCallback(async () => {
     if (!user) return
     const { data: existing } = await supabase.from('user_settings').select('*').eq('user_id', user.id).maybeSingle()
-    if (existing) {
-      setSettings(existing)
-      return existing
-    }
+    if (existing) { setSettings(existing); return existing }
     const { data, error } = await supabase.from('user_settings').insert({ user_id: user.id }).select().single()
-    if (!error && data) {
-      setSettings(data)
-      return data
-    }
+    if (!error && data) { setSettings(data); return data }
   }, [user])
 
   const fetchAll = useCallback(async () => {
@@ -79,7 +66,6 @@ export function AppProvider({ session, children }) {
   }, [user, ensureProfile, ensureSettings])
 
   useEffect(() => { fetchAll() }, [fetchAll])
-
   const refresh = useCallback(() => { fetchAll() }, [fetchAll])
 
   const addXp = useCallback(async (amount) => {
@@ -90,8 +76,6 @@ export function AppProvider({ session, children }) {
     if (level > profile.level) updates.level = level
     setProfile(prev => prev ? { ...prev, ...updates } : prev)
     await supabase.from('profiles').update(updates).eq('user_id', user.id)
-    if (level >= 5) await unlockAchievement('level_5')
-    if (level >= 10) await unlockAchievement('level_10')
   }, [profile, user])
 
   const unlockAchievement = useCallback(async (key) => {

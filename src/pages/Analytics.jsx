@@ -1,122 +1,130 @@
+import { useMemo } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
-import { getStreak, todayStr } from '../lib/helpers.js'
+import { getStreak } from '../lib/helpers.js'
 import './AnalyticsPage.css'
 
 export default function Analytics() {
   const { sessions, subjects, tasks } = useApp()
 
-  const totalMin = sessions.reduce((sum, s) => sum + s.duration_minutes, 0)
-  const streak = getSteark(sessions)
+  const totalMins = useMemo(() => sessions.reduce((sum, s) => sum + (s.duration || 0), 0), [sessions])
+  const streak = getStreak(sessions)
   const completedTasks = tasks.filter(t => t.completed).length
-  const completionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0
+  const completionRate = tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0
 
-  // Weekly data (last 7 days)
-  const weekDays = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i)
-    const ds = d.toISOString().split('T')[0]
-    const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + s.duration_minutes, 0)
-    weekDays.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), mins })
-  }
+  const weekly = useMemo(() => {
+    const days = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + (s.duration || 0), 0)
+      days.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' })[0], mins })
+    }
+    return days
+  }, [sessions])
+  const maxWeekly = Math.max(60, ...weekly.map(d => d.mins))
 
-  // Monthly data (last 30 days heatmap)
-  const heatmap = []
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i)
-    const ds = d.toISOString().split('T')[0]
-    const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + s.duration_minutes, 0)
-    heatmap.push({ date: ds, mins, day: d.getDate() })
-  }
+  const heatmap = useMemo(() => {
+    const cells = []
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      const mins = sessions.filter(s => s.session_date === ds).reduce((sum, s) => sum + (s.duration || 0), 0)
+      cells.push({ date: ds, mins, day: d.getDate() })
+    }
+    return cells
+  }, [sessions])
 
-  // Subject comparison
-  const subjectStats = subjects.map(s => {
-    const mins = sessions.filter(sess => sess.subject_id === s.id).reduce((sum, sess) => sum + sess.duration_minutes, 0)
-    const subTasks = tasks.filter(t => t.subject_id === s.id)
-    const completed = subTasks.filter(t => t.completed).length
-    return { ...s, mins, taskCount: subTasks.length, completed, pct: subTasks.length > 0 ? Math.round((completed / subTasks.length) * 100) : 0 }
-  }).sort((a, b) => b.mins - a.mins)
+  const subjectBars = useMemo(() => {
+    return subjects.map(s => {
+      const mins = sessions.filter(se => se.subject_id === s.id).reduce((sum, se) => sum + (se.duration || 0), 0)
+      return { ...s, mins }
+    }).sort((a, b) => b.mins - a.mins)
+  }, [subjects, sessions])
+  const maxSubjMins = Math.max(60, ...subjectBars.map(s => s.mins))
 
-  const maxWeekMin = Math.max(...weekDays.map(d => d.mins), 1)
-  const maxSubMin = Math.max(...subjectStats.map(s => s.mins), 1)
-  const heatLevels = [0, 1, 30, 60, 120]
-  const getHeatColor = (mins) => {
-    if (mins === 0) return 'var(--surface-2)'
-    if (mins < 30) return 'rgba(79,124,255,0.25)'
-    if (mins < 60) return 'rgba(79,124,255,0.5)'
-    if (mins < 120) return 'rgba(79,124,255,0.75)'
-    return 'var(--primary)'
+  const heatLevel = (mins) => {
+    if (mins === 0) return 0
+    if (mins < 30) return 1
+    if (mins < 60) return 2
+    if (mins < 120) return 3
+    return 4
   }
 
   return (
     <div className="analytics-page">
       <div className="page-toolbar">
-        <p className="page-desc">Track your study habits with detailed charts and statistics.</p>
+        <div>
+          <h2>Analytics</h2>
+          <p className="page-desc">Track your study habits and progress over time.</p>
+        </div>
       </div>
 
-      <div className="grid-4">
-        <div className="card stat-mini">
-          <span className="ana-big-num">{Math.floor(totalMin / 60)}h {totalMin % 60}m</span>
-          <span className="ana-label">Total study time</span>
+      <div className="grid-4 stat-cards">
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8efff', color: '#4f7cff' }}>⏱️</div>
+          <div className="stat-body"><span className="stat-value">{Math.floor(totalMins / 60)}h {totalMins % 60}m</span><span className="stat-label">Total time</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ana-big-num">{streak}</span>
-          <span className="ana-label">Day streak</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fce7f3', color: '#ec4899' }}>🔥</div>
+          <div className="stat-body"><span className="stat-value">{streak} days</span><span className="stat-label">Current streak</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ana-big-num">{completedTasks}</span>
-          <span className="ana-label">Tasks completed</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8f9ee', color: '#22c55e' }}>✅</div>
+          <div className="stat-body"><span className="stat-value">{completedTasks}</span><span className="stat-label">Tasks completed</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ana-big-num">{completionRate}%</span>
-          <span className="ana-label">Completion rate</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fef4e6', color: '#f59e0b' }}>📊</div>
+          <div className="stat-body"><span className="stat-value">{completionRate}%</span><span className="stat-label">Completion rate</span></div>
         </div>
       </div>
 
       <div className="card">
-        <div className="card-head"><h3>Weekly Study Time</h3></div>
-        <div className="ana-bar-chart">
-          {weekDays.map((d, i) => (
-            <div key={i} className="ana-bar-col">
-              <div className="ana-bar-track">
-                <div className="ana-bar-fill" style={{ height: `${(d.mins / maxWeekMin) * 100}%`, background: d.mins > 0 ? 'var(--primary)' : 'var(--surface-2)' }} />
+        <div className="card-head"><h3>Last 7 Days</h3></div>
+        <div className="an-weekly-chart">
+          {weekly.map((d, i) => (
+            <div key={i} className="an-bar-col">
+              <div className="an-bar-track">
+                <div className="an-bar" style={{ height: `${(d.mins / maxWeekly) * 100}%` }} title={`${d.mins} min`} />
               </div>
-              <span className="ana-bar-label">{d.label[0]}</span>
-              <span className="ana-bar-val">{d.mins > 0 ? `${d.mins}m` : ''}</span>
+              <span className="an-bar-label">{d.label}</span>
             </div>
           ))}
         </div>
       </div>
 
       <div className="card">
-        <div className="card-head"><h3>Study Heatmap (last 30 days)</h3></div>
-        <div className="ana-heatmap">
-          {heatmap.map((h, i) => (
-            <div key={i} className="ana-heat-cell" style={{ background: getHeatColor(h.mins) }} title={`${h.date}: ${h.mins}m`} />
+        <div className="card-head"><h3>30-Day Activity</h3></div>
+        <div className="an-heatmap">
+          {heatmap.map((c, i) => (
+            <div key={i} className={`an-heat-cell level-${heatLevel(c.mins)}`} title={`${c.date}: ${c.mins} min`} />
           ))}
         </div>
-        <div className="ana-heat-legend">
+        <div className="an-heat-legend">
           <span>Less</span>
-          {heatLevels.map((l, i) => <div key={i} className="ana-heat-cell" style={{ background: getHeatColor(l) }} />)}
+          <div className="an-heat-cell level-0" />
+          <div className="an-heat-cell level-1" />
+          <div className="an-heat-cell level-2" />
+          <div className="an-heat-cell level-3" />
+          <div className="an-heat-cell level-4" />
           <span>More</span>
         </div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>Subject Comparison</h3></div>
-        {subjectStats.length === 0 ? (
-          <p className="dash-empty">Add subjects to see comparison.</p>
+        {subjectBars.length === 0 ? (
+          <p className="dash-empty">No subjects yet.</p>
         ) : (
-          <div className="ana-subject-list">
-            {subjectStats.map(s => (
-              <div key={s.id} className="ana-subject-row">
-                <span className="ana-subject-name">
-                  <span className="ana-dot" style={{ background: s.color }} />
-                  {s.icon} {s.name}
-                </span>
-                <div className="ana-subject-bar">
-                  <div className="ana-subject-fill" style={{ width: `${(s.mins / maxSubMin) * 100}%`, background: s.color }} />
+          <div className="an-subj-list">
+            {subjectBars.map(s => (
+              <div key={s.id} className="an-subj-row">
+                <span className="an-subj-name">{s.icon} {s.name}</span>
+                <div className="an-subj-bar-track">
+                  <div className="an-subj-bar" style={{ width: `${(s.mins / maxSubjMins) * 100}%`, background: s.color }} />
                 </div>
-                <span className="ana-subject-time">{Math.floor(s.mins / 60)}h {s.mins % 60}m</span>
+                <span className="an-subj-mins">{Math.floor(s.mins / 60)}h {s.mins % 60}m</span>
               </div>
             ))}
           </div>
@@ -125,5 +133,3 @@ export default function Analytics() {
     </div>
   )
 }
-
-function getSteark(sessions) { return getStreak(sessions) }

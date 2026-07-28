@@ -1,31 +1,36 @@
-.analytics-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 16px; }
+.analytics-page { display: flex; flex-direction: column; gap: 16px; animation: slideUp 0.3s ease; }
 
-.stat-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 24px 20px; }
-.ana-big-num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
-.ana-label { font-size: 13px; color: var(--text-2); }
+.stat-cards { gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; align-items: center; gap: 14px; }
+.stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-body { display: flex; flex-direction: column; }
+.stat-value { font-size: 18px; font-weight: 700; }
+.stat-label { font-size: 13px; color: var(--text-2); }
 
-.ana-bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 8px; }
-.ana-bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
-.ana-bar-track { width: 32px; height: 130px; display: flex; align-items: flex-end; border-radius: 6px; overflow: hidden; }
-.ana-bar-fill { width: 100%; border-radius: 6px; min-height: 4px; transition: height 0.4s ease; }
-.ana-bar-label { font-size: 12px; color: var(--text-3); font-weight: 600; }
-.ana-bar-val { font-size: 11px; color: var(--text-2); font-weight: 600; }
+.an-weekly-chart { display: flex; align-items: flex-end; gap: 12px; height: 160px; }
+.an-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; }
+.an-bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.an-bar { width: 100%; background: linear-gradient(180deg, var(--primary), var(--primary-d)); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.4s ease; }
+.an-bar-label { font-size: 12px; color: var(--text-2); font-weight: 600; }
 
-.ana-heatmap { display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; }
-.ana-heat-cell { aspect-ratio: 1; border-radius: 4px; min-width: 20px; min-height: 20px; transition: transform var(--transition); }
-.ana-heat-cell:hover { transform: scale(1.2); }
-.ana-heat-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--text-3); }
-.ana-heat-legend .ana-heat-cell { width: 16px; height: 16px; min-width: 16px; min-height: 16px; }
+.an-heatmap { display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; }
+.an-heat-cell { aspect-ratio: 1; border-radius: 4px; }
+.an-heat-cell.level-0 { background: var(--surface-2); }
+.an-heat-cell.level-1 { background: rgba(79,124,255,0.25); }
+.an-heat-cell.level-2 { background: rgba(79,124,255,0.5); }
+.an-heat-cell.level-3 { background: rgba(79,124,255,0.75); }
+.an-heat-cell.level-4 { background: var(--primary); }
+.an-heat-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--text-2); }
+.an-heat-legend .an-heat-cell { width: 14px; height: 14px; aspect-ratio: auto; }
 
-.ana-subject-list { display: flex; flex-direction: column; gap: 14px; }
-.ana-subject-row { display: flex; align-items: center; gap: 12px; }
-.ana-subject-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; width: 160px; flex-shrink: 0; }
-.ana-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.ana-subject-bar { flex: 1; height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-.ana-subject-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
-.ana-subject-time { font-size: 13px; font-weight: 600; color: var(--text-2); width: 60px; text-align: right; }
+.an-subj-list { display: flex; flex-direction: column; gap: 14px; }
+.an-subj-row { display: flex; align-items: center; gap: 12px; }
+.an-subj-name { width: 140px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.an-subj-bar-track { flex: 1; height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.an-subj-bar { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+.an-subj-mins { width: 70px; font-size: 12px; color: var(--text-2); font-weight: 600; text-align: right; flex-shrink: 0; }
 
-@media (max-width: 768px) {
-  .ana-heatmap { grid-template-columns: repeat(10, 1fr); }
-  .ana-subject-name { width: 100px; }
+@media (max-width: 600px) {
+  .an-heatmap { grid-template-columns: repeat(10, 1fr); }
+  .an-subj-name { width: 100px; }
 }

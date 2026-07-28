@@ -1,39 +1,50 @@
 import { useState } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
-import { levelFromXp, getStreak, AVATAR_OPTIONS } from '../lib/helpers.js'
+import { levelFromXp, getStreak, AVATAR_OPTIONS, ACHIEVEMENT_DEFS } from '../lib/helpers.js'
 import './ProfilePage.css'
 
 export default function Profile() {
-  const { profile, subjects, tasks, sessions, achievements, updateProfile } = useApp()
+  const { profile, subjects, sessions, tasks, achievements, updateProfile } = useApp()
   const [editing, setEditing] = useState(false)
-  const [username, setUsername] = useState(profile?.username || '')
-  const [avatar, setAvatar] = useState(profile?.avatar_emoji || '🦊')
-  const [dailyGoal, setDailyGoal] = useState(profile?.daily_goal_minutes || 120)
+  const [username, setUsername] = useState('')
+  const [avatar, setAvatar] = useState('')
+  const [dailyGoal, setDailyGoal] = useState(120)
+  const [busy, setBusy] = useState(false)
 
-  if (!profile) return null
+  if (!profile) return <div className="spinner" />
 
-  const { level, currentLevelXp, nextLevelXp, progress } = levelFromXp(profile.xp)
+  const { level, currentLevelXp, nextLevelXp, progress } = levelFromXp(profile.xp || 0)
   const streak = getStreak(sessions)
-  const totalHours = Math.floor(profile.total_minutes / 60)
-  const completedTasks = tasks.filter(t => t.completed).length
+  const totalMins = sessions.reduce((sum, s) => sum + (s.duration || 0), 0)
+  const tasksDone = tasks.filter(t => t.completed).length
+  const recentAch = ACHIEVEMENT_DEFS.filter(def => achievements.some(a => a.key === def.key)).slice(-6)
+
+  const startEdit = () => {
+    setUsername(profile.username || '')
+    setAvatar(profile.avatar_emoji || AVATAR_OPTIONS[0])
+    setDailyGoal(profile.daily_goal_minutes || 120)
+    setEditing(true)
+  }
 
   const save = async () => {
-    await updateProfile({ username: username.trim() || 'Student', avatar_emoji: avatar, daily_goal_minutes: dailyGoal })
-    setEditing(false)
+    if (busy) return
+    setBusy(true)
+    await updateProfile({ username: username.trim() || 'Student', avatar_emoji: avatar, daily_goal_minutes: Number(dailyGoal) })
+    setBusy(false); setEditing(false)
   }
 
   return (
     <div className="profile-page">
-      <div className="profile-banner" style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
-        <div className="profile-avatar">{profile.avatar_emoji}</div>
-        <div className="profile-info">
-          <h2>{profile.username}</h2>
-          <span className="profile-email">{profile.user_id ? '' : ''}</span>
-          <div className="profile-level-badge">Level {level}</div>
+      <div className="profile-banner">
+        <div className="profile-banner-bg" />
+        <div className="profile-banner-content">
+          <span className="profile-avatar" style={{ background: 'rgba(255,255,255,0.2)' }}>{profile.avatar_emoji || '🦊'}</span>
+          <div className="profile-banner-info">
+            <h1>{profile.username || 'Student'}</h1>
+            <span className="profile-level-badge">Level {level}</span>
+          </div>
+          <button className="btn btn-ghost profile-edit" style={{ color: '#fff' }} onClick={startEdit}>✏️ Edit</button>
         </div>
-        <button className="btn btn-outline btn-sm profile-edit" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => setEditing(!editing)}>
-          {editing ? 'Cancel' : 'Edit profile'}
-        </button>
       </div>
 
       {editing && (
@@ -41,66 +52,70 @@ export default function Profile() {
           <div className="form-head"><h3>Edit Profile</h3></div>
           <div className="form-field">
             <label>Username</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
+            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your name" />
           </div>
           <div className="form-field">
             <label>Avatar</label>
             <div className="avatar-picker">
               {AVATAR_OPTIONS.map(a => (
-                <button key={a} className={`avatar-opt ${avatar === a ? 'sel' : ''}`} onClick={() => setAvatar(a)}>{a}</button>
+                <button key={a} className={`avatar-swatch ${avatar === a ? 'selected' : ''}`} onClick={() => setAvatar(a)}>{a}</button>
               ))}
             </div>
           </div>
           <div className="form-field">
-            <label>Daily study goal (minutes)</label>
-            <input type="number" value={dailyGoal} onChange={e => setDailyGoal(parseInt(e.target.value) || 120)} min="15" max="600" />
+            <label>Daily goal (minutes)</label>
+            <input type="number" min="15" max="600" step="15" value={dailyGoal} onChange={(e) => setDailyGoal(e.target.value)} />
           </div>
           <div className="form-actions">
-            <button className="btn btn-primary btn-sm" onClick={save}>Save</button>
+            <button className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={busy}>Save</button>
           </div>
         </div>
       )}
 
-      <div className="profile-xp-card card">
-        <div className="pxp-head">
-          <span className="pxp-badge" style={{ background: 'var(--primary)' }}>Level {level}</span>
-          <span className="pxp-total">{profile.xp} XP</span>
+      <div className="card profile-xp-card">
+        <div className="profile-xp-row">
+          <span className="profile-xp-badge">Lv {level}</span>
+          <div className="profile-xp-bar-wrap">
+            <div className="profile-xp-bar" style={{ width: `${progress * 100}%` }} />
+          </div>
+          <span className="profile-xp-text">{currentLevelXp} / {nextLevelXp} XP</span>
         </div>
-        <div className="pxp-bar">
-          <div className="pxp-bar-fill" style={{ width: `${progress * 100}%`, background: 'var(--primary)' }} />
-        </div>
-        <span className="pxp-text">{currentLevelXp} / {nextLevelXp} XP to level {level + 1}</span>
+        <p className="profile-xp-hint">{nextLevelXp - currentLevelXp} XP until level {level + 1}</p>
       </div>
 
-      <div className="grid-4">
-        <div className="card stat-mini">
-          <span className="ps-big">🔥 {streak}</span>
-          <span className="ps-label">Day streak</span>
+      <div className="grid-4 stat-cards">
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fce7f3', color: '#ec4899' }}>🔥</div>
+          <div className="stat-body"><span className="stat-value">{streak} days</span><span className="stat-label">Streak</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ps-big">{totalHours}h</span>
-          <span className="ps-label">Total studied</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8efff', color: '#4f7cff' }}>⏱️</div>
+          <div className="stat-body"><span className="stat-value">{Math.floor(totalMins / 60)}h</span><span className="stat-label">Total hours</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ps-big">{completedTasks}</span>
-          <span className="ps-label">Tasks done</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#e8f9ee', color: '#22c55e' }}>✅</div>
+          <div className="stat-body"><span className="stat-value">{tasksDone}</span><span className="stat-label">Tasks done</span></div>
         </div>
-        <div className="card stat-mini">
-          <span className="ps-big">{subjects.length}</span>
-          <span className="ps-label">Subjects</span>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: '#fef4e6', color: '#f59e0b' }}>📚</div>
+          <div className="stat-body"><span className="stat-value">{subjects.length}</span><span className="stat-label">Subjects</span></div>
         </div>
       </div>
 
       <div className="card">
         <div className="card-head"><h3>Recent Achievements</h3></div>
-        {achievements.length === 0 ? (
-          <p className="dash-empty">No achievements unlocked yet. Complete tasks and study to earn them!</p>
+        {recentAch.length === 0 ? (
+          <p className="dash-empty">No achievements unlocked yet. Keep studying!</p>
         ) : (
-          <div className="profile-achievements">
-            {achievements.map(a => (
-              <div key={a.id} className="pa-item">
-                <span className="pa-icon">🏆</span>
-                <div><span className="pa-title">{a.key.replace(/_/g, ' ')}</span><span className="pa-date">{new Date(a.unlocked_at).toLocaleDateString()}</span></div>
+          <div className="profile-ach-list">
+            {recentAch.map(a => (
+              <div key={a.key} className="profile-ach-item">
+                <span className="profile-ach-icon">{a.icon}</span>
+                <div className="profile-ach-info">
+                  <span className="profile-ach-title">{a.title}</span>
+                  <span className="profile-ach-desc">{a.desc}</span>
+                </div>
               </div>
             ))}
           </div>

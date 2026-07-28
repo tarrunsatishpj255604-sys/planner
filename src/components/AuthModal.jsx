@@ -10,10 +10,7 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (open) {
-      setMode(initialMode || 'signin')
-      setError(''); setEmail(''); setPassword('')
-    }
+    if (open) { setMode(initialMode || 'signin'); setError(''); setEmail(''); setPassword('') }
   }, [open, initialMode])
 
   useEffect(() => {
@@ -25,8 +22,7 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
   if (!open) return null
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault(); setError('')
     if (!email.trim() || !password) { setError('Please enter your email and password.'); return }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
@@ -41,28 +37,19 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
         onClose()
       }
     } catch (err) {
-      const msg = err?.message || 'Something went wrong. Please try again.'
-      if (msg.includes('Failed to fetch') || msg.includes('fetch'))
-        setError('Could not reach the server. Please check your connection and try again.')
-      else if (msg.includes('Invalid login'))
-        setError('Incorrect email or password.')
-      else
-        setError(msg)
-    } finally {
-      setLoading(false)
-    }
+      const msg = err?.message || 'Something went wrong.'
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) setError('Could not reach the server. Please check your connection.')
+      else if (msg.includes('Invalid login')) setError('Incorrect email or password.')
+      else setError(msg)
+    } finally { setLoading(false) }
   }
 
   return (
     <div className="auth-overlay" onClick={onClose}>
       <div className="auth-card" onClick={(e) => e.stopPropagation()}>
-        <button className="auth-close" onClick={onClose} aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-        </button>
+        <button className="auth-close" onClick={onClose}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg></button>
         <div className="auth-head">
-          <span className="brand-mark">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
-          </span>
+          <span className="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg></span>
           <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
           <p>{mode === 'signup' ? 'Start planning your best year yet — free forever.' : 'Sign in to sync your subjects, tasks and progress.'}</p>
         </div>
@@ -71,30 +58,11 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
           <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => { setMode('signup'); setError('') }}>Sign up</button>
         </div>
         <form className="auth-body" onSubmit={handleSubmit}>
-          {error && (
-            <div className="auth-error">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
-              {error}
-            </div>
-          )}
-          <div className="auth-field">
-            <label htmlFor="auth-email">Email</label>
-            <input id="auth-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu" autoComplete="email" disabled={loading} />
-          </div>
-          <div className="auth-field">
-            <label htmlFor="auth-password">Password</label>
-            <input id="auth-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} disabled={loading} />
-          </div>
-          <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
-            {loading && <span className="spinner" />}
-            {loading ? 'Please wait…' : (mode === 'signup' ? 'Create account' : 'Sign in')}
-          </button>
-          <div className="auth-foot">
-            {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-            <button type="button" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError('') }}>
-              {mode === 'signin' ? 'Sign up' : 'Sign in'}
-            </button>
-          </div>
+          {error && <div className="auth-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>{error}</div>}
+          <div className="auth-field"><label htmlFor="auth-email">Email</label><input id="auth-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu" autoComplete="email" disabled={loading} /></div>
+          <div className="auth-field"><label htmlFor="auth-password">Password</label><input id="auth-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} disabled={loading} /></div>
+          <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>{loading && <span className="spinner" />}{loading ? 'Please wait…' : (mode === 'signup' ? 'Create account' : 'Sign in')}</button>
+          <div className="auth-foot">{mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}<button type="button" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError('') }}>{mode === 'signin' ? 'Sign up' : 'Sign in'}</button></div>
         </form>
       </div>
     </div>
