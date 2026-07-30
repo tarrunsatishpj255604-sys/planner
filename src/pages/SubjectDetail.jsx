@@ -1,103 +1,47 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
-import { todayStr, XP_REWARDS } from '../lib/helpers.js'
+import { todayStr, formatDate } from '../lib/helpers.js'
 import './SubjectDetail.css'
 
 const TABS = ['Overview', 'Notes', 'Flashcards', 'Assignments', 'Exams', 'Resources', 'Chapters', 'Time Spent']
 
 export default function SubjectDetail({ subjectId, onNavigate }) {
-  const { subjects, sessions, tasks, notes, flashcards, exams, loading, refresh, addXp, unlockAchievement } = useApp()
+  const { subjects, tasks, notes, flashcards, sessions, exams, loading, refresh, addXp, unlockAchievement } = useApp()
   const [tab, setTab] = useState('Overview')
   const subject = subjects.find(s => s.id === subjectId)
 
-  // form states
-  const [noteText, setNoteText] = useState('')
-  const [fcFront, setFcFront] = useState('')
-  const [fcBack, setFcBack] = useState('')
-  const [taskTitle, setTaskTitle] = useState('')
-  const [taskDue, setTaskDue] = useState('')
-  const [examTitle, setExamTitle] = useState('')
-  const [examDate, setExamDate] = useState('')
-  const [resourceName, setResourceName] = useState('')
-  const [resourceUrl, setResourceUrl] = useState('')
-  const [chapterName, setChapterName] = useState('')
-  const [resources, setResources] = useState([])
-  const [chapters, setChapters] = useState([])
+  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
+  if (!subject) return (
+    <div className="empty-state">
+      <div className="empty-icon" style={{ background: 'var(--error-l)', color: 'var(--error)', fontSize: 28 }}>❓</div>
+      <h3>Subject not found</h3>
+      <button className="btn btn-primary" onClick={() => onNavigate('subjects')}>Back to Subjects</button>
+    </div>
+  )
 
-  const subjectSessions = useMemo(() => sessions.filter(s => s.subject_id === subjectId), [sessions, subjectId])
-  const subjectTasks = useMemo(() => tasks.filter(t => t.subject_id === subjectId), [tasks, subjectId])
-  const subjectNotes = useMemo(() => notes.filter(n => n.subject_id === subjectId), [notes, subjectId])
-  const subjectFlashcards = useMemo(() => flashcards.filter(f => f.subject_id === subjectId), [flashcards, subjectId])
-  const subjectExams = useMemo(() => exams.filter(e => e.subject_id === subjectId), [exams, subjectId])
-  const totalTime = subjectSessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
-  const completedTasks = subjectTasks.filter(t => t.completed).length
-  const progress = subjectTasks.length > 0 ? completedTasks / subjectTasks.length : 0
+  const subNotes = notes.filter(n => n.subject_id === subjectId)
+  const subFlashcards = flashcards.filter(f => f.subject_id === subjectId)
+  const subTasks = tasks.filter(t => t.subject_id === subjectId)
+  const subExams = exams.filter(e => e.subject_id === subjectId)
+  const subSessions = sessions.filter(s => s.subject_id === subjectId)
+  const studyMins = subSessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+  const completedTasks = subTasks.filter(t => t.completed).length
+  const taskPct = subTasks.length ? completedTasks / subTasks.length : 0
 
-  const addNote = async () => {
-    if (!noteText.trim()) return
-    await supabase.from('notes').insert({ title: noteText.trim().slice(0, 50), content: noteText.trim(), subject_id: subjectId, folder: 'General' })
-    setNoteText(''); refresh()
-  }
-  const delNote = async (id) => { await supabase.from('notes').delete().eq('id', id); refresh() }
-
-  const addFlashcard = async () => {
-    if (!fcFront.trim()) return
-    await supabase.from('flashcards').insert({ front: fcFront.trim(), back: fcBack.trim(), subject_id: subjectId, srs_interval: 1, srs_ease: 250, srs_due: todayStr(), review_count: 0, starred: false })
-    setFcFront(''); setFcBack(''); refresh()
-  }
-  const delFlashcard = async (id) => { await supabase.from('flashcards').delete().eq('id', id); refresh() }
-
-  const addTask = async () => {
-    if (!taskTitle.trim()) return
-    await supabase.from('tasks').insert({ title: taskTitle.trim(), subject_id: subjectId, due_date: taskDue || null, priority: 'medium' })
-    setTaskTitle(''); setTaskDue(''); refresh()
-  }
-  const toggleTask = async (t) => {
-    if (t.completed) { await supabase.from('tasks').update({ completed: false, completed_at: null }).eq('id', t.id) }
-    else { await supabase.from('tasks').update({ completed: true, completed_at: new Date().toISOString() }).eq('id', t.id); await addXp(XP_REWARDS.task_complete); await unlockAchievement('first_task') }
-    refresh()
-  }
-  const delTask = async (id) => { await supabase.from('tasks').delete().eq('id', id); refresh() }
-
-  const addExam = async () => {
-    if (!examTitle.trim() || !examDate) return
-    await supabase.from('exams').insert({ title: examTitle.trim(), subject_id: subjectId, exam_date: examDate })
-    setExamTitle(''); setExamDate(''); refresh()
-  }
-  const delExam = async (id) => { await supabase.from('exams').delete().eq('id', id); refresh() }
-
-  const addResource = () => {
-    if (!resourceName.trim()) return
-    setResources([...resources, { id: Date.now(), name: resourceName.trim(), url: resourceUrl.trim() }])
-    setResourceName(''); setResourceUrl('')
-  }
-  const delResource = (id) => setResources(resources.filter(r => r.id !== id))
-
-  const addChapter = () => {
-    if (!chapterName.trim()) return
-    setChapters([...chapters, { id: Date.now(), name: chapterName.trim(), done: false }])
-    setChapterName('')
-  }
-  const toggleChapter = (id) => setChapters(chapters.map(c => c.id === id ? { ...c, done: !c.done } : c))
-  const delChapter = (id) => setChapters(chapters.filter(c => c.id !== id))
-
-  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} /></div>
-  if (!subject) return <div className="empty-state"><h3>Subject not found</h3><button className="btn btn-primary" onClick={() => onNavigate('subjects')}>Back to Subjects</button></div>
-
-  const R = 52, C = 2 * Math.PI * R
   return (
-    <div className="subject-detail">
+    <div className="subject-detail-page">
       <div className="sd-header" style={{ background: `linear-gradient(135deg, ${subject.color}, ${subject.color}cc)` }}>
-        <button className="btn btn-ghost btn-sm sd-back" onClick={() => onNavigate('subjects')} style={{ color: '#fff' }}>← Back</button>
-        <div className="sd-header-info">
-          <span className="sd-header-icon">{subject.icon || '📘'}</span>
+        <button className="btn btn-sm back-btn" onClick={() => onNavigate('subjects')}>← Back</button>
+        <div className="sd-header-content">
+          <span className="sd-icon">{subject.icon || '📘'}</span>
           <div>
-            <h2>{subject.name}</h2>
-            <div className="sd-header-stats">
-              <span>⏱️ {Math.floor(totalTime / 60)}h {totalTime % 60}m</span>
-              <span>📋 {subjectTasks.length} tasks</span>
-              <span>🃏 {subjectFlashcards.length} cards</span>
+            <h1 className="sd-title">{subject.name}</h1>
+            <div className="sd-meta">
+              <span>⏱️ {Math.floor(studyMins / 60)}h {studyMins % 60}m</span>
+              <span>✅ {completedTasks}/{subTasks.length} tasks</span>
+              <span>🃏 {subFlashcards.length} cards</span>
+              {subject.target_grade && <span>🎯 Target: {subject.target_grade}</span>}
             </div>
           </div>
         </div>
@@ -110,176 +54,267 @@ export default function SubjectDetail({ subjectId, onNavigate }) {
       </div>
 
       <div className="sd-content">
-        {tab === 'Overview' && (
-          <div className="grid-2">
-            <div className="card">
-              <div className="card-head"><h3>Progress</h3></div>
-              <div className="sd-goal-ring">
-                <svg width="140" height="140" viewBox="0 0 140 140">
-                  <circle cx="70" cy="70" r={R} fill="none" stroke="var(--border)" strokeWidth="10" />
-                  <circle cx="70" cy="70" r={R} fill="none" stroke={subject.color} strokeWidth="10" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 0.5s ease' }} />
-                </svg>
-                <div className="sd-goal-center"><span className="sd-goal-pct">{Math.round(progress * 100)}%</span><span className="sd-goal-detail">{completedTasks}/{subjectTasks.length} done</span></div>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-head"><h3>Quick Stats</h3></div>
-              <div className="sd-stat-list">
-                <div className="sd-stat-row"><span>Total Study Time</span><strong>{Math.floor(totalTime / 60)}h {totalTime % 60}m</strong></div>
-                <div className="sd-stat-row"><span>Tasks Completed</span><strong>{completedTasks}/{subjectTasks.length}</strong></div>
-                <div className="sd-stat-row"><span>Flashcards</span><strong>{subjectFlashcards.length}</strong></div>
-                <div className="sd-stat-row"><span>Notes</span><strong>{subjectNotes.length}</strong></div>
-                <div className="sd-stat-row"><span>Exams</span><strong>{subjectExams.length}</strong></div>
-                <div className="sd-stat-row"><span>Sessions</span><strong>{subjectSessions.length}</strong></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {tab === 'Notes' && (
-          <div className="card">
-            <div className="card-head"><h3>Notes</h3></div>
-            <div className="sd-form-inline">
-              <textarea placeholder="Write a note..." value={noteText} onChange={e => setNoteText(e.target.value)} rows="3" />
-              <button className="btn btn-primary" onClick={addNote}>Add Note</button>
-            </div>
-            {subjectNotes.length === 0 ? <div className="dash-empty">No notes for this subject yet.</div> : (
-              <div className="sd-list">
-                {subjectNotes.map(n => (
-                  <div key={n.id} className="sd-list-item">
-                    <div><strong>{n.title}</strong><p className="sd-list-desc">{n.content}</p></div>
-                    <button className="sd-del-btn" onClick={() => delNote(n.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Flashcards' && (
-          <div className="card">
-            <div className="card-head"><h3>Flashcards</h3></div>
-            <div className="sd-fc-form">
-              <input placeholder="Front" value={fcFront} onChange={e => setFcFront(e.target.value)} />
-              <input placeholder="Back" value={fcBack} onChange={e => setFcBack(e.target.value)} />
-              <button className="btn btn-primary" onClick={addFlashcard}>Add</button>
-            </div>
-            {subjectFlashcards.length === 0 ? <div className="dash-empty">No flashcards yet.</div> : (
-              <div className="sd-fc-grid">
-                {subjectFlashcards.map(f => (
-                  <div key={f.id} className="sd-fc-card">
-                    <div className="sd-fc-front">{f.front}</div>
-                    <div className="sd-fc-back">{f.back}</div>
-                    <button className="sd-del-btn" onClick={() => delFlashcard(f.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Assignments' && (
-          <div className="card">
-            <div className="card-head"><h3>Assignments</h3></div>
-            <div className="sd-form-inline">
-              <input placeholder="Task title" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} />
-              <input type="date" value={taskDue} onChange={e => setTaskDue(e.target.value)} />
-              <button className="btn btn-primary" onClick={addTask}>Add</button>
-            </div>
-            {subjectTasks.length === 0 ? <div className="dash-empty">No assignments yet.</div> : (
-              <div className="sd-list">
-                {subjectTasks.map(t => (
-                  <div key={t.id} className="sd-list-item">
-                    <button className={`task-check ${t.completed ? 'checked' : ''}`} onClick={() => toggleTask(t)} style={t.completed ? { background: 'var(--success)', borderColor: 'var(--success)' } : {}} />
-                    <div><span className={t.completed ? 'sd-task-done' : ''}>{t.title}</span>{t.due_date && <span className="sd-list-sub">Due {t.due_date}</span>}</div>
-                    <button className="sd-del-btn" onClick={() => delTask(t.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Exams' && (
-          <div className="card">
-            <div className="card-head"><h3>Exams</h3></div>
-            <div className="sd-form-inline">
-              <input placeholder="Exam title" value={examTitle} onChange={e => setExamTitle(e.target.value)} />
-              <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} />
-              <button className="btn btn-primary" onClick={addExam}>Add</button>
-            </div>
-            {subjectExams.length === 0 ? <div className="dash-empty">No exams scheduled.</div> : (
-              <div className="sd-list">
-                {subjectExams.map(e => (
-                  <div key={e.id} className="sd-list-item">
-                    <div><strong>{e.title}</strong><span className="sd-list-sub">{e.exam_date}</span></div>
-                    <button className="sd-del-btn" onClick={() => delExam(e.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Resources' && (
-          <div className="card">
-            <div className="card-head"><h3>Resources</h3></div>
-            <div className="sd-form-inline">
-              <input placeholder="Resource name" value={resourceName} onChange={e => setResourceName(e.target.value)} />
-              <input placeholder="URL (optional)" value={resourceUrl} onChange={e => setResourceUrl(e.target.value)} />
-              <button className="btn btn-primary" onClick={addResource}>Add</button>
-            </div>
-            {resources.length === 0 ? <div className="dash-empty">No resources added.</div> : (
-              <div className="sd-list">
-                {resources.map(r => (
-                  <div key={r.id} className="sd-list-item">
-                    <div><strong>{r.name}</strong>{r.url && <a href={r.url} target="_blank" rel="noreferrer" className="sd-list-sub">{r.url}</a>}</div>
-                    <button className="sd-del-btn" onClick={() => delResource(r.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Chapters' && (
-          <div className="card">
-            <div className="card-head"><h3>Chapters</h3></div>
-            <div className="sd-form-inline">
-              <input placeholder="Chapter name" value={chapterName} onChange={e => setChapterName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addChapter()} />
-              <button className="btn btn-primary" onClick={addChapter}>Add</button>
-            </div>
-            {chapters.length === 0 ? <div className="dash-empty">No chapters yet.</div> : (
-              <div className="sd-list">
-                {chapters.map(c => (
-                  <div key={c.id} className="sd-list-item">
-                    <button className={`task-check ${c.done ? 'checked' : ''}`} onClick={() => toggleChapter(c.id)} style={c.done ? { background: 'var(--success)', borderColor: 'var(--success)' } : {}} />
-                    <span className={c.done ? 'sd-task-done' : ''}>{c.name}</span>
-                    <button className="sd-del-btn" onClick={() => delChapter(c.id)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === 'Time Spent' && (
-          <div className="card">
-            <div className="card-head"><h3>Time Spent</h3></div>
-            <div className="sd-total-time" style={{ color: subject.color }}>{Math.floor(totalTime / 60)}h {totalTime % 60}m</div>
-            <p className="sd-total-label">Total study time</p>
-            {subjectSessions.length === 0 ? <div className="dash-empty">No sessions logged yet.</div> : (
-              <div className="sd-list">
-                {subjectSessions.map(s => (
-                  <div key={s.id} className="sd-list-item">
-                    <div><strong>{s.duration_minutes} min</strong><span className="sd-list-sub">{s.session_date}{s.notes ? ` · ${s.notes}` : ''}</span></div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {tab === 'Overview' && <OverviewTab subject={subject} studyMins={studyMins} taskPct={taskPct} subNotes={subNotes} subFlashcards={subFlashcards} subExams={subExams} subSessions={subSessions} />}
+        {tab === 'Notes' && <NotesTab subjectId={subjectId} subNotes={subNotes} refresh={refresh} />}
+        {tab === 'Flashcards' && <FlashcardsTab subjectId={subjectId} subFlashcards={subFlashcards} refresh={refresh} />}
+        {tab === 'Assignments' && <AssignmentsTab subjectId={subjectId} subTasks={subTasks} refresh={refresh} addXp={addXp} unlockAchievement={unlockAchievement} />}
+        {tab === 'Exams' && <ExamsTab subjectId={subjectId} subExams={subExams} refresh={refresh} />}
+        {tab === 'Resources' && <ResourcesTab />}
+        {tab === 'Chapters' && <ChaptersTab />}
+        {tab === 'Time Spent' && <TimeSpentTab subSessions={subSessions} studyMins={studyMins} />}
       </div>
+    </div>
+  )
+}
+
+function OverviewTab({ subject, studyMins, taskPct, subNotes, subFlashcards, subExams, subSessions }) {
+  const ringR = 52, ringC = 2 * Math.PI * ringR
+  return (
+    <div className="grid-2">
+      <div className="card overview-ring-card">
+        <div className="card-head"><h3>Task Progress</h3></div>
+        <div className="overview-ring-wrap">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r={ringR} fill="none" stroke="var(--surface-2)" strokeWidth="10" />
+            <circle cx="70" cy="70" r={ringR} fill="none" stroke={subject.color} strokeWidth="10" strokeLinecap="round"
+              strokeDasharray={ringC} strokeDashoffset={ringC * (1 - taskPct)} transform="rotate(-90 70 70)" style={{ transition: 'stroke-dashoffset 0.5s ease' }} />
+            <text x="70" y="75" textAnchor="middle" className="ring-pct" style={{ fontSize: 24, fontWeight: 800, fill: 'var(--text)' }}>{Math.round(taskPct * 100)}%</text>
+          </svg>
+        </div>
+        <p className="overview-ring-label">{Math.round(taskPct * 100)}% of tasks completed</p>
+      </div>
+      <div className="card">
+        <div className="card-head"><h3>Quick Stats</h3></div>
+        <div className="overview-stats">
+          <div className="ov-stat"><span className="ov-num">{subNotes.length}</span><span className="ov-lbl">Notes</span></div>
+          <div className="ov-stat"><span className="ov-num">{subFlashcards.length}</span><span className="ov-lbl">Flashcards</span></div>
+          <div className="ov-stat"><span className="ov-num">{subExams.length}</span><span className="ov-lbl">Exams</span></div>
+          <div className="ov-stat"><span className="ov-num">{subSessions.length}</span><span className="ov-lbl">Sessions</span></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function NotesTab({ subjectId, subNotes, refresh }) {
+  const [content, setContent] = useState('')
+  const [title, setTitle] = useState('')
+  const add = async () => {
+    if (!content.trim()) return
+    await supabase.from('notes').insert({ title: title.trim() || 'Untitled', content: content.trim(), subject_id: subjectId, folder: 'General' })
+    setTitle(''); setContent(''); refresh()
+  }
+  const del = async (id) => { await supabase.from('notes').delete().eq('id', id); refresh() }
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Note</h3></div>
+        <div className="form-field"><label>Title</label><input type="text" placeholder="Note title" value={title} onChange={e => setTitle(e.target.value)} /></div>
+        <div className="form-field"><label>Content</label><textarea rows="4" placeholder="Write your note..." value={content} onChange={e => setContent(e.target.value)} /></div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Note</button></div>
+      </div>
+      {subNotes.length === 0 ? <div className="dash-empty">No notes for this subject yet.</div> : (
+        <div className="sd-list">
+          {subNotes.map(n => (
+            <div key={n.id} className="sd-list-item">
+              <div className="sd-li-info"><span className="sd-li-title">{n.title}</span><span className="sd-li-preview">{n.content?.slice(0, 80) || 'No content'}</span></div>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(n.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FlashcardsTab({ subjectId, subFlashcards, refresh }) {
+  const [front, setFront] = useState('')
+  const [back, setBack] = useState('')
+  const add = async () => {
+    if (!front.trim() || !back.trim()) return
+    await supabase.from('flashcards').insert({ front: front.trim(), back: back.trim(), subject_id: subjectId, srs_interval: 1, srs_ease: 250, srs_due: todayStr(), review_count: 0, starred: false })
+    setFront(''); setBack(''); refresh()
+  }
+  const del = async (id) => { await supabase.from('flashcards').delete().eq('id', id); refresh() }
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Flashcard</h3></div>
+        <div className="form-row">
+          <div className="form-field"><label>Front</label><input type="text" placeholder="Question" value={front} onChange={e => setFront(e.target.value)} /></div>
+          <div className="form-field"><label>Back</label><input type="text" placeholder="Answer" value={back} onChange={e => setBack(e.target.value)} /></div>
+        </div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Card</button></div>
+      </div>
+      {subFlashcards.length === 0 ? <div className="dash-empty">No flashcards for this subject yet.</div> : (
+        <div className="sd-list">
+          {subFlashcards.map(fc => (
+            <div key={fc.id} className="sd-list-item">
+              <div className="sd-li-info"><span className="sd-li-title">{fc.front}</span><span className="sd-li-preview">{fc.back}</span></div>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(fc.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AssignmentsTab({ subjectId, subTasks, refresh, addXp, unlockAchievement }) {
+  const [title, setTitle] = useState('')
+  const [due, setDue] = useState('')
+  const add = async () => {
+    if (!title.trim()) return
+    await supabase.from('tasks').insert({ title: title.trim(), subject_id: subjectId, due_date: due || null, priority: 'medium', completed: false })
+    setTitle(''); setDue(''); refresh()
+  }
+  const toggle = async (task) => {
+    await supabase.from('tasks').update({ completed: !task.completed }).eq('id', task.id)
+    if (!task.completed) { await addXp(20); await unlockAchievement('first_task') }
+    refresh()
+  }
+  const del = async (id) => { await supabase.from('tasks').delete().eq('id', id); refresh() }
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Assignment</h3></div>
+        <div className="form-row">
+          <div className="form-field"><label>Title</label><input type="text" placeholder="Assignment title" value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div className="form-field"><label>Due Date</label><input type="date" value={due} onChange={e => setDue(e.target.value)} /></div>
+        </div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Task</button></div>
+      </div>
+      {subTasks.length === 0 ? <div className="dash-empty">No assignments for this subject yet.</div> : (
+        <div className="sd-list">
+          {subTasks.map(t => (
+            <div key={t.id} className="sd-list-item">
+              <button className={`task-check ${t.completed ? 'checked' : ''}`} onClick={() => toggle(t)} style={t.completed ? { background: 'var(--primary)', borderColor: 'var(--primary)' } : {}}>
+                {t.completed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+              </button>
+              <div className="sd-li-info"><span className={`sd-li-title ${t.completed ? 'done' : ''}`}>{t.title}</span><span className="sd-li-preview">{t.due_date ? formatDate(t.due_date) : 'No due date'}</span></div>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(t.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ExamsTab({ subjectId, subExams, refresh }) {
+  const [title, setTitle] = useState('')
+  const [date, setDate] = useState('')
+  const add = async () => {
+    if (!title.trim() || !date) return
+    await supabase.from('exams').insert({ title: title.trim(), subject_id: subjectId, exam_date: date })
+    setTitle(''); setDate(''); refresh()
+  }
+  const del = async (id) => { await supabase.from('exams').delete().eq('id', id); refresh() }
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Exam</h3></div>
+        <div className="form-row">
+          <div className="form-field"><label>Exam Title</label><input type="text" placeholder="e.g. Midterm" value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div className="form-field"><label>Exam Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+        </div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Exam</button></div>
+      </div>
+      {subExams.length === 0 ? <div className="dash-empty">No exams for this subject yet.</div> : (
+        <div className="sd-list">
+          {subExams.map(ex => (
+            <div key={ex.id} className="sd-list-item">
+              <div className="sd-li-info"><span className="sd-li-title">{ex.title}</span><span className="sd-li-preview">{formatDate(ex.exam_date)}</span></div>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(ex.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ResourcesTab() {
+  const [resources, setResources] = useState([])
+  const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
+  const add = () => {
+    if (!name.trim()) return
+    setResources(prev => [...prev, { id: Date.now(), name: name.trim(), url: url.trim() }])
+    setName(''); setUrl('')
+  }
+  const del = (id) => setResources(prev => prev.filter(r => r.id !== id))
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Resource</h3></div>
+        <div className="form-row">
+          <div className="form-field"><label>Name</label><input type="text" placeholder="Resource name" value={name} onChange={e => setName(e.target.value)} /></div>
+          <div className="form-field"><label>URL (optional)</label><input type="text" placeholder="https://..." value={url} onChange={e => setUrl(e.target.value)} /></div>
+        </div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Resource</button></div>
+      </div>
+      {resources.length === 0 ? <div className="dash-empty">No resources added yet.</div> : (
+        <div className="sd-list">
+          {resources.map(r => (
+            <div key={r.id} className="sd-list-item">
+              <div className="sd-li-info"><span className="sd-li-title">{r.name}</span>{r.url && <a href={r.url} target="_blank" rel="noreferrer" className="sd-li-preview">{r.url}</a>}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(r.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChaptersTab() {
+  const [chapters, setChapters] = useState([])
+  const [name, setName] = useState('')
+  const add = () => {
+    if (!name.trim()) return
+    setChapters(prev => [...prev, { id: Date.now(), name: name.trim(), done: false }])
+    setName('')
+  }
+  const toggle = (id) => setChapters(prev => prev.map(c => c.id === id ? { ...c, done: !c.done } : c))
+  const del = (id) => setChapters(prev => prev.filter(c => c.id !== id))
+  return (
+    <div>
+      <div className="form-card">
+        <div className="form-head"><h3>Add Chapter</h3></div>
+        <div className="form-field"><label>Chapter Name</label><input type="text" placeholder="e.g. Chapter 1: Algebra" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} /></div>
+        <div className="form-actions"><button className="btn btn-primary" onClick={add}>Add Chapter</button></div>
+      </div>
+      {chapters.length === 0 ? <div className="dash-empty">No chapters added yet.</div> : (
+        <div className="sd-list">
+          {chapters.map(ch => (
+            <div key={ch.id} className="sd-list-item">
+              <button className={`task-check ${ch.done ? 'checked' : ''}`} onClick={() => toggle(ch.id)} style={ch.done ? { background: 'var(--primary)', borderColor: 'var(--primary)' } : {}}>
+                {ch.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+              </button>
+              <span className={`sd-li-title ${ch.done ? 'done' : ''}`} style={{ flex: 1 }}>{ch.name}</span>
+              <button className="btn btn-ghost btn-sm" onClick={() => del(ch.id)}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TimeSpentTab({ subSessions, studyMins }) {
+  return (
+    <div className="card">
+      <div className="card-head"><h3>Study Sessions</h3><span className="total-time-badge">{Math.floor(studyMins / 60)}h {studyMins % 60}m total</span></div>
+      {subSessions.length === 0 ? <div className="dash-empty">No study sessions logged yet.</div> : (
+        <div className="sd-list">
+          {subSessions.map(s => (
+            <div key={s.id} className="sd-list-item">
+              <div className="sd-li-info"><span className="sd-li-title">{s.duration_minutes}m session</span><span className="sd-li-preview">{formatDate(s.session_date)}{s.notes ? ` · ${s.notes}` : ''}</span></div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -17,6 +17,9 @@ export function AppProvider({ session, children }) {
   const [quickNotes, setQuickNotes] = useState([])
   const [settings, setSettings] = useState(null)
   const [files, setFiles] = useState([])
+  const [friends, setFriends] = useState([])
+  const [friendRequests, setFriendRequests] = useState([])
+  const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const user = session?.user
 
@@ -40,7 +43,7 @@ export function AppProvider({ session, children }) {
   const fetchAll = useCallback(async () => {
     if (!user) return
     await Promise.all([ensureProfile(), ensureSettings()])
-    const [subRes, taskRes, noteRes, fcRes, sessRes, examRes, achRes, qnRes, fileRes] = await Promise.all([
+    const [subRes, taskRes, noteRes, fcRes, sessRes, examRes, achRes, qnRes, fileRes, frRes, freqRes, notifRes] = await Promise.all([
       supabase.from('subjects').select('*').order('created_at', { ascending: true }),
       supabase.from('tasks').select('*, subject:subjects(*)').order('created_at', { ascending: false }),
       supabase.from('notes').select('*, subject:subjects(*)').order('updated_at', { ascending: false }),
@@ -50,6 +53,9 @@ export function AppProvider({ session, children }) {
       supabase.from('achievements').select('*'),
       supabase.from('quick_notes').select('*').order('created_at', { ascending: false }),
       supabase.from('user_files').select('*, subject:subjects(*)').order('created_at', { ascending: false }),
+      supabase.from('friends').select('*, friend:profiles!friends_friend_id_fkey(*)').order('created_at', { ascending: false }),
+      supabase.from('friend_requests').select('*, sender:profiles!friend_requests_sender_id_fkey(*)').eq('receiver_id', user.id).eq('status', 'pending'),
+      supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(50),
     ])
     if (subRes.data) setSubjects(subRes.data)
     if (taskRes.data) setTasks(taskRes.data)
@@ -60,6 +66,9 @@ export function AppProvider({ session, children }) {
     if (achRes.data) setAchievements(achRes.data)
     if (qnRes.data) setQuickNotes(qnRes.data)
     if (fileRes.data) setFiles(fileRes.data)
+    if (frRes.data) setFriends(frRes.data)
+    if (freqRes.data) setFriendRequests(freqRes.data)
+    if (notifRes.data) setNotifications(notifRes.data)
     setLoading(false)
   }, [user, ensureProfile, ensureSettings])
 
@@ -94,8 +103,29 @@ export function AppProvider({ session, children }) {
     await supabase.from('profiles').update(updates).eq('user_id', user.id)
   }, [profile, user])
 
+  const pushNotification = useCallback(async (targetUserId, type, title, body, actorId, resourceId) => {
+    await supabase.from('notifications').insert({ user_id: targetUserId, type, title, body, actor_id: actorId || user.id, resource_id: resourceId || null })
+  }, [user])
+
+  const markNotificationRead = useCallback(async (id) => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+  }, [])
+
+  const markAllNotificationsRead = useCallback(async () => {
+    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false)
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+  }, [user])
+
+  const unreadCount = notifications.filter(n => !n.is_read).length
+
   return (
-    <AppContext.Provider value={{ user, profile, subjects, tasks, notes, flashcards, sessions, exams, achievements, quickNotes, files, settings, loading, refresh, addXp, unlockAchievement, updateSettings, updateProfile }}>
+    <AppContext.Provider value={{
+      user, profile, subjects, tasks, notes, flashcards, sessions, exams, achievements, quickNotes, files,
+      friends, friendRequests, notifications, unreadCount, settings, loading,
+      refresh, addXp, unlockAchievement, updateSettings, updateProfile,
+      pushNotification, markNotificationRead, markAllNotificationsRead,
+    }}>
       {children}
     </AppContext.Provider>
   )

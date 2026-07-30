@@ -4,7 +4,7 @@ export function levelFromXp(xp) {
   while (remaining >= xpForLevel(level)) { remaining -= xpForLevel(level); level++ }
   return { level, currentLevelXp: remaining, nextLevelXp: xpForLevel(level), progress: remaining / xpForLevel(level) }
 }
-export const XP_REWARDS = { task_complete: 20, task_hard: 35, pomodoro: 15, study_session: 10, daily_login: 5, flashcard_review: 5 }
+export const XP_REWARDS = { task_complete: 20, task_hard: 35, pomodoro: 15, study_session: 10, daily_login: 5, flashcard_review: 5, friend_add: 30, group_session: 25, note_share: 15, note_like: 5 }
 export const ACHIEVEMENT_DEFS = [
   { key: 'first_task', title: 'First Steps', desc: 'Complete your first task', icon: '🎯' },
   { key: 'first_session', title: 'Getting Started', desc: 'Complete a study session', icon: '📚' },
@@ -185,6 +185,17 @@ export const ACHIEVEMENT_DEFS = [
   { key: 'getting_started_ach', title: 'Achievement Hunter', desc: 'Unlock 10 achievements', icon: '🔍' },
   { key: 'collector', title: 'Collector', desc: 'Unlock 25 achievements', icon: '📦' },
   { key: 'enthusiast', title: 'Enthusiast', desc: 'Unlock 50 achievements', icon: '🏆' },
+  { key: 'first_friend', title: 'First Friend', desc: 'Add your first friend', icon: '👥' },
+  { key: 'study_together', title: 'Study Together', desc: 'Join a group study session', icon: '🤝' },
+  { key: 'shared_knowledge', title: 'Shared Knowledge', desc: 'Share your first note', icon: '📤' },
+  { key: 'top_10_leaderboard', title: 'Top 10', desc: 'Reach top 10 on a leaderboard', icon: '🏅' },
+  { key: 'team_player', title: 'Team Player', desc: 'Complete 5 group sessions', icon: '🤝' },
+  { key: 'study_partner', title: 'Consistent Study Partner', desc: 'Study with the same friend 10 times', icon: '🫂' },
+  { key: 'social_butterfly', title: 'Social Butterfly', desc: 'Add 10 friends', icon: '🦋' },
+  { key: 'note_liked', title: 'Crowd Favorite', desc: 'Get a like on your shared note', icon: '❤️' },
+  { key: 'note_downloaded', title: 'Helping Hand', desc: 'Get a note duplicated by someone', icon: '📥' },
+  { key: 'popular_note', title: 'Viral Knowledge', desc: 'Get 10 likes on a shared note', icon: '🔥' },
+  { key: 'trending_note', title: 'Trending', desc: 'Have a note featured in trending', icon: '📈' },
 ]
 export function formatDate(dateStr) {
   if (!dateStr) return ''

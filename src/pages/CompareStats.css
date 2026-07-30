@@ -1,0 +1,24 @@
+.cs-page { display: flex; flex-direction: column; gap: 20px; }
+.cs-friend-pick { display: flex; flex-direction: column; gap: 16px; }
+.cs-friend-pick h3 { font-size: 15px; font-weight: 600; }
+.cs-pick-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.cs-pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all var(--transition); }
+.cs-pick-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+.cs-pick-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.cs-vs-header { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.cs-vs-side { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cs-vs-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.cs-vs-name { font-size: 14px; font-weight: 700; }
+.cs-vs-label { font-size: 20px; font-weight: 800; color: var(--text-3); }
+.cs-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.cs-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.cs-stat-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-2); }
+.cs-bars { display: flex; flex-direction: column; gap: 10px; }
+.cs-bar-row { display: flex; align-items: center; gap: 8px; }
+.cs-bar-label { font-size: 12px; font-weight: 600; min-width: 60px; color: var(--text-2); }
+.cs-bar-track { flex: 1; height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.cs-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+.cs-bar-val { font-size: 13px; font-weight: 700; min-width: 50px; text-align: right; }
+.cs-insights { display: flex; flex-direction: column; gap: 10px; }
+.cs-insight { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--primary-l); color: var(--text); font-size: 14px; font-weight: 500; }
+@media (max-width: 768px) { .cs-vs-header { gap: 12px; } .cs-bar-label { min-width: 40px; } }

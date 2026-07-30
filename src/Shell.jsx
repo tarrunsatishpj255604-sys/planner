@@ -15,6 +15,11 @@ import Analytics from './pages/Analytics.jsx'
 import Profile from './pages/Profile.jsx'
 import Settings from './pages/Settings.jsx'
 import Friends from './pages/Friends.jsx'
+import Leaderboards from './pages/Leaderboards.jsx'
+import StudyRooms from './pages/StudyRooms.jsx'
+import SharedNotes from './pages/SharedNotes.jsx'
+import CompareStats from './pages/CompareStats.jsx'
+import Notifications from './pages/Notifications.jsx'
 import AIAssistant from './pages/AIAssistant.jsx'
 import Files from './pages/Files.jsx'
 import Achievements from './pages/Achievements.jsx'
@@ -28,16 +33,21 @@ const NAV = [
   { id: 'flashcards', label: 'Flashcards', icon: 'M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M7 9h10 M7 13h6' },
   { id: 'focus', label: 'Focus', icon: 'M12 13V9M12 5V3M5 3 2 6M22 6l-3-3M12 21a8 8 0 1 1 0-16 8 8 0 0 1 0 16z' },
   { id: 'analytics', label: 'Analytics', icon: 'M3 3v18h18M7 14l4-4 3 3 5-5' },
-  { id: 'friends', label: 'Friends', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
   { id: 'files', label: 'Files', icon: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' },
-  { id: 'ai', label: 'AI Assistant', icon: 'M12 2a3 3 0 0 1 3 3c0 1.5-1 2-1 3.5S16 11 17 11a3 3 0 0 1 0 6c-1 0-2 .5-2 2s1 1.5 1 3a3 3 0 0 1-6 0c0-1.5 1-2 1-3s-2-2-3-2a3 3 0 0 1 0-6c1 0 2-.5 2-2S9 6.5 9 5a3 3 0 0 1 3-3z' },
   { id: 'achievements', label: 'Achievements', icon: 'M6 9H4.5a2.5 2.5 0 0 1 0-5H6 M18 9h1.5a2.5 2.5 0 0 0 0-5H18 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22 M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22 M18 2H6v7a6 6 0 0 0 12 0V2z' },
+  { id: 'friends', label: 'Friends', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
+  { id: 'leaderboards', label: 'Leaderboards', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M8 21v-1a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v1 M3 11l2-2 2 2 M17 11l2-2 2 2' },
+  { id: 'studyrooms', label: 'Study Rooms', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
+  { id: 'sharednotes', label: 'Shared Notes', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8' },
+  { id: 'comparestats', label: 'Compare Stats', icon: 'M18 20V10M12 20V4M6 20v-6' },
+  { id: 'notifications', label: 'Notifications', icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
+  { id: 'ai', label: 'AI Assistant', icon: 'M12 2a3 3 0 0 1 3 3c0 1.5-1 2-1 3.5S16 11 17 11a3 3 0 0 1 0 6c-1 0-2 .5-2 2s1 1.5 1 3a3 3 0 0 1-6 0c0-1.5 1-2 1-3s-2-2-3-2a3 3 0 0 1 0-6c1 0 2-.5 2-2S9 6.5 9 5a3 3 0 0 1 3-3z' },
   { id: 'profile', label: 'Profile', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z' },
   { id: 'settings', label: 'Settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' },
 ]
 
 export default function Shell({ session }) {
-  const { settings, profile, subjects } = useApp()
+  const { settings, profile, subjects, unreadCount } = useApp()
   const [route, setRoute] = useState('dashboard')
   const [subjectId, setSubjectId] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -83,7 +93,12 @@ export default function Shell({ session }) {
       case 'analytics': return <Analytics />
       case 'profile': return <Profile />
       case 'settings': return <Settings />
-      case 'friends': return <Friends />
+      case 'friends': return <Friends onNavigate={navigate} />
+      case 'leaderboards': return <Leaderboards />
+      case 'studyrooms': return <StudyRooms />
+      case 'sharednotes': return <SharedNotes onNavigate={navigate} />
+      case 'comparestats': return <CompareStats onNavigate={navigate} />
+      case 'notifications': return <Notifications />
       case 'ai': return <AIAssistant />
       case 'files': return <Files />
       case 'achievements': return <Achievements />
@@ -103,7 +118,10 @@ export default function Shell({ session }) {
         <nav className="sidebar-nav">
           {NAV.map((item) => (
             <button key={item.id} className={`nav-item ${route === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)} style={route === item.id ? { background: 'var(--primary)', color: '#fff' } : {}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={item.icon} /></svg>
+              <span className="nav-icon-wrap" style={{ position: 'relative' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={item.icon} /></svg>
+                {item.id === 'notifications' && unreadCount > 0 && <span className="badge-dot" />}
+              </span>
               <span>{item.label}</span>
             </button>
           ))}

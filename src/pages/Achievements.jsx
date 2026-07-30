@@ -5,45 +5,43 @@ import './AchievementsPage.css'
 export default function Achievements() {
   const { achievements, loading } = useApp()
 
-  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} /></div>
+  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
 
   const unlockedKeys = new Set(achievements.map(a => a.key))
   const unlockedCount = unlockedKeys.size
-  const totalDefs = ACHIEVEMENT_DEFS.length
-  const pct = Math.round((unlockedCount / totalDefs) * 100)
+  const totalCount = ACHIEVEMENT_DEFS.length
+  const pct = totalCount ? (unlockedCount / totalCount) * 100 : 0
 
   return (
     <div className="achievements-page">
       <div className="page-toolbar">
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Achievements</h2>
-          <p className="page-desc">Unlock {totalDefs} achievements by studying, completing tasks, and more.</p>
-        </div>
+        <div><h2>Achievements</h2><p className="page-desc">Unlock achievements by studying, completing tasks, and reaching milestones.</p></div>
       </div>
 
       <div className="card ach-progress-card">
-        <div className="ach-progress-info">
-          <h3>{unlockedCount} / {totalDefs} Unlocked</h3>
-          <span>{pct}% complete</span>
+        <div className="ach-progress-header">
+          <h3>Progress</h3>
+          <span className="ach-count">{unlockedCount} / {totalCount}</span>
         </div>
         <div className="ach-progress-bar">
           <div className="ach-progress-fill" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--primary), var(--accent))' }} />
         </div>
+        <p className="ach-progress-text">{Math.round(pct)}% complete</p>
       </div>
 
       <div className="ach-grid">
         {ACHIEVEMENT_DEFS.map(def => {
           const unlocked = unlockedKeys.has(def.key)
           return (
-            <div key={def.key} className={`card ach-card ${unlocked ? 'unlocked' : 'locked'}`}>
-              <span className="ach-card-icon">{def.icon}</span>
-              <span className="ach-card-title">{def.title}</span>
-              <span className="ach-card-desc">{def.desc}</span>
-              {unlocked ? (
-                <span className="ach-card-badge unlocked-badge">✓ Unlocked</span>
-              ) : (
-                <span className="ach-card-badge locked-badge">🔒 Locked</span>
-              )}
+            <div key={def.key} className={`ach-card ${unlocked ? 'unlocked' : 'locked'}`}>
+              <div className="ach-icon-wrap">
+                <span className="ach-icon">{unlocked ? def.icon : '🔒'}</span>
+              </div>
+              <div className="ach-info">
+                <span className="ach-title">{def.title}</span>
+                <span className="ach-desc">{def.desc}</span>
+              </div>
+              {unlocked && <span className="ach-badge">✓</span>}
             </div>
           )
         })}

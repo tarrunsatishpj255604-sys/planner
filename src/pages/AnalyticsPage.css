@@ -1,26 +1,24 @@
-.analytics-page { display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
-.analytics-stats { gap: 16px; }
-.analytics-stat { display: flex; align-items: center; gap: 14px; padding: 20px; }
-.analytics-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.analytics-stat-val { font-size: 22px; font-weight: 800; display: block; line-height: 1.2; }
-.analytics-stat-label { font-size: 12px; color: var(--text-2); }
-.analytics-week-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding: 20px 0 4px; }
-.analytics-week-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
-.analytics-week-bar { width: 100%; max-width: 40px; border-radius: 8px 8px 0 0; min-height: 4px; transition: height 0.4s ease; }
-.analytics-week-label { font-size: 12px; color: var(--text-2); font-weight: 600; }
-.analytics-week-mins { font-size: 11px; color: var(--text-3); }
-.analytics-heatmap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 12px 0; }
-.analytics-heat-cell { aspect-ratio: 1; border-radius: 4px; min-height: 24px; transition: all var(--transition); }
-.analytics-heat-cell:hover { transform: scale(1.15); }
-.analytics-heat-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 8px; font-size: 11px; color: var(--text-2); }
-.analytics-heat-legend .analytics-heat-cell { width: 14px; height: 14px; min-height: 14px; aspect-ratio: auto; }
-.analytics-subject-bars { display: flex; flex-direction: column; gap: 14px; }
-.analytics-subject-row { display: flex; align-items: center; gap: 12px; }
-.analytics-subject-name { font-size: 14px; font-weight: 600; min-width: 140px; flex-shrink: 0; }
-.analytics-subject-bar-wrap { flex: 1; height: 24px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
-.analytics-subject-bar { height: 100%; border-radius: 12px; transition: width 0.4s ease; }
-.analytics-subject-time { font-size: 13px; font-weight: 600; color: var(--text-2); min-width: 70px; text-align: right; }
-@media (max-width: 768px) {
-  .analytics-week-chart { height: 150px; gap: 4px; }
-  .analytics-subject-name { min-width: 100px; font-size: 13px; }
-}
+.analytics-page { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 16px; }
+.analytics-sub { font-size: 13px; color: var(--text-2); font-weight: 500; }
+.stat-card { display: flex; align-items: center; gap: 14px; padding: 18px; }
+.stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.stat-info { display: flex; flex-direction: column; }
+.stat-value { font-size: 22px; font-weight: 800; }
+.stat-label { font-size: 12px; color: var(--text-2); }
+.week-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding-top: 20px; }
+.week-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.week-bar-value { font-size: 11px; color: var(--text-2); font-weight: 600; }
+.week-bar { width: 100%; max-width: 40px; border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; }
+.week-bar-label { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.heatmap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding-top: 8px; }
+.heat-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease; }
+.heat-cell:hover { transform: scale(1.15); }
+.heat-day { font-size: 10px; color: var(--text-3); font-weight: 600; }
+.subject-comparison { display: flex; flex-direction: column; gap: 16px; }
+.sc-item { }
+.sc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.sc-name { font-size: 14px; font-weight: 600; }
+.sc-time { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.sc-bar-track { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.sc-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+.sc-task-pct { font-size: 11px; color: var(--text-3); margin-top: 4px; }
