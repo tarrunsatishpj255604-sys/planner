@@ -5,7 +5,7 @@ import { SUBJECT_ICONS, SUBJECT_COLORS } from '../lib/helpers.js'
 import './SubjectList.css'
 
 export default function SubjectList({ onNavigate }) {
-  const { subjects, sessions, tasks, loading, refresh } = useApp()
+  const { subjects, tasks, sessions, loading, refresh, unlockAchievement } = useApp()
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [icon, setIcon] = useState(SUBJECT_ICONS[0])
@@ -13,20 +13,19 @@ export default function SubjectList({ onNavigate }) {
   const [targetGrade, setTargetGrade] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const studyTime = (sid) => sessions.filter(s => s.subject_id === sid).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
-  const taskProgress = (sid) => {
-    const st = tasks.filter(t => t.subject_id === sid)
-    if (st.length === 0) return { done: 0, total: 0, pct: 0 }
-    const done = st.filter(t => t.completed).length
-    return { done, total: st.length, pct: done / st.length }
-  }
+  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 28, height: 28 }} /></div>
 
   const addSubject = async () => {
-    if (!name.trim()) return
+    if (!name.trim() || saving) return
     setSaving(true)
-    await supabase.from('subjects').insert({ name: name.trim(), color, target_grade: targetGrade.trim() || null })
-    setName(''); setIcon(SUBJECT_ICONS[0]); setColor(SUBJECT_COLORS[0]); setTargetGrade('')
-    setShowForm(false); setSaving(false); refresh()
+    const { error } = await supabase.from('subjects').insert({ name: name.trim(), color, icon, target_grade: targetGrade || null })
+    if (!error) {
+      if (subjects.length === 0) await unlockAchievement('subjects_1')
+      if (subjects.length === 2) await unlockAchievement('subjects_3')
+      setName(''); setIcon(SUBJECT_ICONS[0]); setColor(SUBJECT_COLORS[0]); setTargetGrade(''); setShowForm(false)
+      refresh()
+    }
+    setSaving(false)
   }
 
   const deleteSubject = async (id) => {
@@ -34,16 +33,21 @@ export default function SubjectList({ onNavigate }) {
     refresh()
   }
 
-  if (loading) return <div className="dash-loading"><div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} /></div>
+  const getStudyTime = (subjectId) => {
+    return sessions.filter(s => s.subject_id === subjectId).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+  }
+  const getTaskProgress = (subjectId) => {
+    const subTasks = tasks.filter(t => t.subject_id === subjectId)
+    if (subTasks.length === 0) return { done: 0, total: 0, pct: 0 }
+    const done = subTasks.filter(t => t.completed).length
+    return { done, total: subTasks.length, pct: done / subTasks.length }
+  }
 
   return (
-    <div className="subject-list">
+    <div className="subject-list-page">
       <div className="page-toolbar">
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Subjects</h2>
-          <p className="page-desc">Organize your courses with custom colors, icons, and target grades.</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : '+ Add Subject'}</button>
+        <div><h2>Subjects</h2><p className="page-desc">Create and manage your study subjects. Click a subject to view notes, flashcards, tasks, and more.</p></div>
+        <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Subject'}</button>
       </div>
 
       {showForm && (
@@ -51,7 +55,7 @@ export default function SubjectList({ onNavigate }) {
           <div className="form-head"><h3>New Subject</h3></div>
           <div className="form-field">
             <label>Subject Name</label>
-            <input type="text" placeholder="e.g. Mathematics" value={name} onChange={e => setName(e.target.value)} autoFocus />
+            <input type="text" placeholder="e.g. Mathematics" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="form-field">
             <label>Icon</label>
@@ -71,7 +75,7 @@ export default function SubjectList({ onNavigate }) {
           </div>
           <div className="form-field">
             <label>Target Grade (optional)</label>
-            <input type="text" placeholder="e.g. A" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
+            <input type="text" placeholder="e.g. A+" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
           </div>
           <div className="form-actions">
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
@@ -82,32 +86,35 @@ export default function SubjectList({ onNavigate }) {
 
       {subjects.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)' }}>📚</div>
+          <div className="empty-icon" style={{ background: 'var(--primary-l)', color: 'var(--primary)', fontSize: 28 }}>📚</div>
           <h3>No subjects yet</h3>
-          <p>Add your first subject to start tracking your study progress.</p>
+          <p>Add your first subject to start organizing your studies.</p>
           <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Add Subject</button>
         </div>
       ) : (
         <div className="grid-3 subject-grid">
-          {subjects.map(s => {
-            const time = studyTime(s.id)
-            const tp = taskProgress(s.id)
+          {subjects.map(subj => {
+            const studyMins = getStudyTime(subj.id)
+            const tp = getTaskProgress(subj.id)
             return (
-              <div key={s.id} className="card subject-card" onClick={() => onNavigate('subject-detail', s.id)}>
-                <div className="subject-card-top" style={{ background: `linear-gradient(135deg, ${s.color}22, ${s.color}08)` }}>
-                  <span className="subject-card-icon" style={{ background: s.color }}>{s.icon || '📘'}</span>
-                  <button className="subject-del-btn" onClick={(e) => { e.stopPropagation(); deleteSubject(s.id) }}>✕</button>
+              <div key={subj.id} className="card subject-card" onClick={() => onNavigate('subject-detail', subj.id)}>
+                <div className="subject-card-header" style={{ background: `linear-gradient(135deg, ${subj.color}, ${subj.color}dd)` }}>
+                  <span className="subject-icon">{subj.icon || '📘'}</span>
+                  {subj.target_grade && <span className="subject-target">Target: {subj.target_grade}</span>}
                 </div>
-                <h3 className="subject-card-name">{s.name}</h3>
-                <div className="subject-card-meta">
-                  {s.target_grade && <span className="subject-grade-badge" style={{ color: s.color, background: `${s.color}15` }}>Target: {s.target_grade}</span>}
-                  <span className="subject-time-badge">⏱️ {Math.floor(time / 60)}h {time % 60}m</span>
-                </div>
-                <div className="subject-task-progress">
-                  <div className="subject-task-bar">
-                    <div className="subject-task-fill" style={{ width: `${tp.pct * 100}%`, background: s.color }} />
+                <div className="subject-card-body">
+                  <h3 className="subject-name">{subj.name}</h3>
+                  <div className="subject-stats">
+                    <span className="ss-item">⏱️ {Math.floor(studyMins / 60)}h {studyMins % 60}m</span>
+                    <span className="ss-item">✅ {tp.done}/{tp.total} tasks</span>
                   </div>
-                  <span className="subject-task-count">{tp.done}/{tp.total} tasks</span>
+                  <div className="subject-progress">
+                    <div className="subject-progress-bar" style={{ width: `${tp.pct * 100}%`, background: subj.color }} />
+                  </div>
+                  <div className="subject-card-actions">
+                    <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); onNavigate('subject-detail', subj.id) }}>Open →</button>
+                    <button className="btn btn-ghost btn-sm del-btn" onClick={(e) => { e.stopPropagation(); deleteSubject(subj.id) }}>🗑️</button>
+                  </div>
                 </div>
               </div>
             )
