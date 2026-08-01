@@ -27,11 +27,17 @@ export default function StudyRooms() {
   const [inviteCopied, setInviteCopied] = useState(false)
   const [inviteError, setInviteError] = useState('')
   const [joinError, setJoinError] = useState('')
+  const [inviteExpiresIn, setInviteExpiresIn] = useState(0)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [myOwnedRooms, setMyOwnedRooms] = useState([])
 
   const fetchRooms = useCallback(async () => {
-    const { data } = await supabase.from('study_rooms').select('*, room_members(count)').eq('is_public', true).order('created_at', { ascending: false })
-    setRooms(data || []); setLoading(false)
-  }, [])
+    const { data } = await supabase.from('study_rooms').select('*, room_members(count)').order('created_at', { ascending: false })
+    const visible = (data || []).filter(r => r.is_public || r.user_id === user?.id)
+    setRooms(visible)
+    setMyOwnedRooms((data || []).filter(r => r.user_id === user?.id))
+    setLoading(false)
+  }, [user])
 
   useEffect(() => { fetchRooms() }, [fetchRooms])
 
@@ -88,6 +94,15 @@ export default function StudyRooms() {
     setActiveRoom(null); setMembers([]); setChat([]); refresh(); fetchRooms()
   }
 
+  const deleteRoom = async (roomId) => {
+    await supabase.from('room_invites').delete().eq('room_id', roomId)
+    await supabase.from('room_members').delete().eq('room_id', roomId)
+    await supabase.from('study_rooms').delete().eq('id', roomId)
+    setShowDeleteConfirm(false)
+    if (activeRoom?.id === roomId) { setActiveRoom(null); setMembers([]); setChat([]) }
+    fetchRooms(); refresh()
+  }
+
   const toggleReady = async () => {
     const newReady = !ready; setReady(newReady)
     await supabase.from('room_members').update({ is_ready: newReady }).eq('room_id', activeRoom.id).eq('user_id', user.id)
@@ -126,7 +141,14 @@ export default function StudyRooms() {
     if (error) { setInviteError('Could not create invite link.'); return }
     const link = `${window.location.origin}/?invite=${token}`
     setInviteLink(link)
+    setInviteExpiresIn(10 * 60)
   }
+
+  useEffect(() => {
+    if (inviteExpiresIn <= 0) return
+    const t = setTimeout(() => setInviteExpiresIn(inviteExpiresIn - 1), 1000)
+    return () => clearTimeout(t)
+  }, [inviteExpiresIn])
 
   const copyInvite = () => {
     if (!inviteLink) return
@@ -152,20 +174,44 @@ export default function StudyRooms() {
           <div className="sr-invite-section">
             <div className="sr-invite-header">
               <h3>Invite Link</h3>
-              {!inviteLink ? (
-                <button className="btn btn-outline btn-sm" onClick={generateInvite}>Generate Invite Link</button>
-              ) : (
-                <button className="btn btn-primary btn-sm" onClick={copyInvite}>{inviteCopied ? 'Copied!' : 'Copy Link'}</button>
-              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {!inviteLink ? (
+                  <button className="btn btn-outline btn-sm" onClick={generateInvite}>Generate Invite Link</button>
+                ) : inviteExpiresIn > 0 ? (
+                  <button className="btn btn-primary btn-sm" onClick={copyInvite}>{inviteCopied ? 'Copied!' : 'Copy Link'}</button>
+                ) : (
+                  <button className="btn btn-outline btn-sm" onClick={generateInvite}>Generate New Link</button>
+                )}
+                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--error)' }} onClick={() => setShowDeleteConfirm(true)}>Delete Room</button>
+              </div>
             </div>
-            {inviteLink && (
+            {inviteLink && inviteExpiresIn > 0 && (
               <div className="sr-invite-info">
                 <code className="sr-invite-link">{inviteLink}</code>
-                <span className="sr-invite-expiry">Expires in 10 minutes</span>
+                <span className="sr-invite-expiry">Expires in {Math.floor(inviteExpiresIn / 60)}:{String(inviteExpiresIn % 60).padStart(2, '0')}</span>
+              </div>
+            )}
+            {inviteLink && inviteExpiresIn === 0 && (
+              <div className="sr-invite-info">
+                <code className="sr-invite-link" style={{ opacity: 0.5, textDecoration: 'line-through' }}>{inviteLink}</code>
+                <span className="sr-invite-expiry" style={{ color: 'var(--error)' }}>Expired — generate a new link</span>
               </div>
             )}
             {inviteError && <div className="ai-error" style={{ marginTop: 8 }}>{inviteError}</div>}
             <p className="dash-empty" style={{ fontSize: 12, marginTop: 6 }}>Share this link with friends. They can join even if the room is private. The link expires after 10 minutes.</p>
+          </div>
+        )}
+
+        {showDeleteConfirm && (
+          <div className="sr-delete-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="sr-delete-dialog" onClick={e => e.stopPropagation()}>
+              <h3>Delete this room?</h3>
+              <p>This will permanently remove the room and kick all members. This cannot be undone.</p>
+              <div className="sr-delete-actions">
+                <button className="btn btn-ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                <button className="btn btn-primary" style={{ background: 'var(--error)' }} onClick={() => deleteRoom(activeRoom.id)}>Delete Room</button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -249,6 +295,9 @@ export default function StudyRooms() {
                 <span>👥 {room.room_members?.[0]?.count || 0}/{room.max_participants}</span>
                 {room.subject && <span>📚 {room.subject}</span>}
               </div>
+              {room.user_id === user?.id && (
+                <button className="btn btn-ghost btn-sm sr-card-delete" style={{ color: 'var(--error)' }} onClick={(e) => { e.stopPropagation(); deleteRoom(room.id) }}>Delete</button>
+              )}
             </div>
           ))}
         </div>

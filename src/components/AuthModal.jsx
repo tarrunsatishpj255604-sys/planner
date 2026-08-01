@@ -32,7 +32,11 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
         if (error) throw error
-        if (data?.user) {
+        if (data?.session) {
+          onClose()
+        } else if (data?.user) {
+          setSignupEmailSent(true)
+        } else {
           setSignupEmailSent(true)
         }
       } else {

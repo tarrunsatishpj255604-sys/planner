@@ -1,6 +1,6 @@
 .sr-page { display: flex; flex-direction: column; gap: 16px; }
 .sr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-.sr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all var(--transition); animation: slideUp 0.3s ease; }
+.sr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all var(--transition); animation: slideUp 0.3s ease; position: relative; }
 .sr-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .sr-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .sr-card-icon { font-size: 28px; }
@@ -41,4 +41,10 @@
 .sr-invite-info { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
 .sr-invite-link { display: block; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; color: var(--primary); word-break: break-all; }
 .sr-invite-expiry { font-size: 12px; color: var(--warning); font-weight: 600; }
+.sr-delete-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(15,20,40,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.sr-delete-dialog { width: 100%; max-width: 380px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 28px 24px; text-align: center; }
+.sr-delete-dialog h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.sr-delete-dialog p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+.sr-delete-actions { display: flex; gap: 10px; justify-content: center; }
+.sr-card-delete { position: absolute; top: 12px; right: 12px; padding: 4px 10px; font-size: 12px; }
 @media (max-width: 768px) { .sr-room-body { grid-template-columns: 1fr; } }
