@@ -9,9 +9,10 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
+  const [signupEmailSent, setSignupEmailSent] = useState(false)
 
   useEffect(() => {
-    if (open) { setMode(initialMode || 'signin'); setError(''); setEmail(''); setPassword(''); setResetSent(false) }
+    if (open) { setMode(initialMode || 'signin'); setError(''); setEmail(''); setPassword(''); setResetSent(false); setSignupEmailSent(false) }
   }, [open, initialMode])
 
   useEffect(() => {
@@ -31,7 +32,9 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
         if (error) throw error
-        if (data?.user) onClose()
+        if (data?.user) {
+          setSignupEmailSent(true)
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
         if (error) throw error
@@ -80,8 +83,11 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
           </>
         ) : (
           <>
-            <div className="auth-head"><span className="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg></span><h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2><p>{mode === 'signup' ? 'Start planning your best year yet — free forever.' : 'Sign in to sync your subjects, tasks and progress.'}</p></div>
+            <div className="auth-head"><span className="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg></span><h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2><p>{mode === 'signup' ? 'Start planning your best year yet.' : 'Sign in to sync your subjects, tasks and progress.'}</p></div>
             <div className="auth-tabs"><button className={`auth-tab ${mode === 'signin' ? 'active' : ''}`} onClick={() => { setMode('signin'); setError('') }}>Sign in</button><button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => { setMode('signup'); setError('') }}>Sign up</button></div>
+            {signupEmailSent ? (
+              <div className="auth-body"><div className="auth-success"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>Check your inbox — we've sent a confirmation link to your email. Click it to activate your account and start studying.</div><button className="btn btn-primary auth-submit" onClick={() => { setSignupEmailSent(false); setMode('signin'); setError('') }}>Back to sign in</button></div>
+            ) : (
             <form className="auth-body" onSubmit={handleSubmit}>
               {error && <div className="auth-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>{error}</div>}
               <div className="auth-field"><label htmlFor="auth-email">Email</label><input id="auth-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu" autoComplete="email" disabled={loading} /></div>
@@ -90,6 +96,7 @@ export default function AuthModal({ open, onClose, mode: initialMode }) {
               <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>{loading && <span className="spinner" />}{loading ? 'Please wait…' : (mode === 'signup' ? 'Create account' : 'Sign in')}</button>
               <div className="auth-foot">{mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}<button type="button" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError('') }}>{mode === 'signin' ? 'Sign up' : 'Sign in'}</button></div>
             </form>
+            )}
           </>
         )}
       </div>

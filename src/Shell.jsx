@@ -20,7 +20,6 @@ import StudyRooms from './pages/StudyRooms.jsx'
 import SharedNotes from './pages/SharedNotes.jsx'
 import CompareStats from './pages/CompareStats.jsx'
 import Notifications from './pages/Notifications.jsx'
-import AIAssistant from './pages/AIAssistant.jsx'
 import Files from './pages/Files.jsx'
 import Achievements from './pages/Achievements.jsx'
 
@@ -41,7 +40,6 @@ const NAV = [
   { id: 'sharednotes', label: 'Shared Notes', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8' },
   { id: 'comparestats', label: 'Compare Stats', icon: 'M18 20V10M12 20V4M6 20v-6' },
   { id: 'notifications', label: 'Notifications', icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
-  { id: 'ai', label: 'AI Assistant', icon: 'M12 2a3 3 0 0 1 3 3c0 1.5-1 2-1 3.5S16 11 17 11a3 3 0 0 1 0 6c-1 0-2 .5-2 2s1 1.5 1 3a3 3 0 0 1-6 0c0-1.5 1-2 1-3s-2-2-3-2a3 3 0 0 1 0-6c1 0 2-.5 2-2S9 6.5 9 5a3 3 0 0 1 3-3z' },
   { id: 'profile', label: 'Profile', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z' },
   { id: 'settings', label: 'Settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' },
 ]
@@ -99,7 +97,6 @@ export default function Shell({ session }) {
       case 'sharednotes': return <SharedNotes onNavigate={navigate} />
       case 'comparestats': return <CompareStats onNavigate={navigate} />
       case 'notifications': return <Notifications />
-      case 'ai': return <AIAssistant />
       case 'files': return <Files />
       case 'achievements': return <Achievements />
       default: return <Dashboard onNavigate={navigate} />

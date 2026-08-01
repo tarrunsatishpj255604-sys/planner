@@ -10,11 +10,11 @@ export default function Landing({ onSignIn, onSignUp }) {
         </div>
       </div></nav>
       <header id="top" className="hero"><div className="hero-bg" /><div className="hero-inner">
-        <div className="hero-badge">Free forever — no credit card needed</div>
+        <div className="hero-badge">Free to start — no credit card needed</div>
         <h1>Plan your best<br />year yet.</h1>
         <p className="hero-sub">A clean, focused study planner for students. Track subjects, manage tasks, study with focus timers, create flashcards, and watch your progress grow.</p>
         <div className="hero-cta">
-          <button className="btn btn-primary" onClick={onSignUp} style={{ padding: '14px 28px', fontSize: 15 }}>Start planning — it's free</button>
+          <button className="btn btn-primary" onClick={onSignUp} style={{ padding: '14px 28px', fontSize: 15 }}>Get started — it's free</button>
           <button className="btn btn-outline" onClick={onSignIn} style={{ padding: '14px 28px', fontSize: 15 }}>I already have an account</button>
         </div>
         <div className="hero-preview"><div className="preview-window"><div className="preview-bar"><span /><span /><span /></div>
@@ -49,7 +49,7 @@ export default function Landing({ onSignIn, onSignUp }) {
       </div></section>
       <section className="cta-section"><div className="cta-inner">
         <h2>Ready to plan your best year?</h2>
-        <button className="btn btn-primary" onClick={onSignUp} style={{ padding: '14px 32px', fontSize: 15 }}>Create your free account</button>
+        <button className="btn btn-primary" onClick={onSignUp} style={{ padding: '14px 32px', fontSize: 15 }}>Create your account</button>
       </div></section>
       <footer className="footer"><div className="footer-inner">
         <div className="brand" style={{ fontSize: 15 }}><span className="brand-icon" style={{ width: 28, height: 28 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg></span><span>StudySpace</span></div>

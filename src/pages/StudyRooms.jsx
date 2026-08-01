@@ -3,6 +3,13 @@ import { useApp } from '../lib/AppContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
 import './StudyRooms.css'
 
+function generateToken() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let token = ''
+  for (let i = 0; i < 16; i++) token += chars[Math.floor(Math.random() * chars.length)]
+  return token
+}
+
 export default function StudyRooms() {
   const { user, profile, addXp, unlockAchievement, refresh } = useApp()
   const [rooms, setRooms] = useState([])
@@ -16,6 +23,10 @@ export default function StudyRooms() {
   const [ready, setReady] = useState(false)
   const [roomPhase, setRoomPhase] = useState('idle')
   const [timeLeft, setTimeLeft] = useState(0)
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteCopied, setInviteCopied] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+  const [joinError, setJoinError] = useState('')
 
   const fetchRooms = useCallback(async () => {
     const { data } = await supabase.from('study_rooms').select('*, room_members(count)').eq('is_public', true).order('created_at', { ascending: false })
@@ -23,6 +34,24 @@ export default function StudyRooms() {
   }, [])
 
   useEffect(() => { fetchRooms() }, [fetchRooms])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const inviteToken = params.get('invite')
+    if (inviteToken) {
+      handleInviteJoin(inviteToken)
+      params.delete('invite')
+      window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`)
+    }
+  }, [])
+
+  const handleInviteJoin = async (token) => {
+    setJoinError('')
+    const { data: invite, error } = await supabase.from('room_invites').select('*, room:study_rooms(*)').eq('token', token).maybeSingle()
+    if (error || !invite) { setJoinError('Invalid invite link.'); return }
+    if (new Date(invite.expires_at) < new Date()) { setJoinError('This invite link has expired.'); return }
+    joinRoom(invite.room)
+  }
 
   const fetchMembers = useCallback(async (roomId) => {
     const { data } = await supabase.from('room_members').select('*, profile:profiles!room_members_user_id_fkey(*)').eq('room_id', roomId)
@@ -50,6 +79,7 @@ export default function StudyRooms() {
     const existing = members.find(m => m.user_id === user.id)
     if (!existing) await supabase.from('room_members').insert({ room_id: room.id, user_id: user.id, role: 'member' })
     setActiveRoom(room); setRoomPhase(room.current_phase || 'idle'); setTimeLeft(room.timer_duration * 60); setReady(false)
+    setInviteLink(''); setInviteCopied(false); setInviteError('')
     fetchMembers(room.id)
   }
 
@@ -88,10 +118,26 @@ export default function StudyRooms() {
     setChatMsg('')
   }
 
+  const generateInvite = async () => {
+    setInviteError(''); setInviteCopied(false)
+    const token = generateToken()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+    const { error } = await supabase.from('room_invites').insert({ room_id: activeRoom.id, created_by: user.id, token, expires_at: expiresAt })
+    if (error) { setInviteError('Could not create invite link.'); return }
+    const link = `${window.location.origin}/?invite=${token}`
+    setInviteLink(link)
+  }
+
+  const copyInvite = () => {
+    if (!inviteLink) return
+    navigator.clipboard.writeText(inviteLink).then(() => { setInviteCopied(true); setTimeout(() => setInviteCopied(false), 2000) })
+  }
+
   const formatTime = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
   const memberCount = members.length
   const readyCount = members.filter(m => m.is_ready).length
   const progress = activeRoom && roomPhase !== 'idle' ? ((activeRoom.timer_duration * 60 - timeLeft) / (activeRoom.timer_duration * 60)) * 100 : 0
+  const isHost = members.some(m => m.user_id === user.id && m.role === 'host')
 
   if (activeRoom) {
     return (
@@ -101,6 +147,29 @@ export default function StudyRooms() {
           <div><h2>{activeRoom.name}</h2>{activeRoom.subject && <span className="dash-empty">{activeRoom.subject}</span>}</div>
           <div className="sr-phase-badge" style={{ background: roomPhase === 'studying' ? 'var(--success-l)' : roomPhase === 'break' ? 'var(--warning-l)' : 'var(--surface-2)', color: roomPhase === 'studying' ? 'var(--success)' : roomPhase === 'break' ? 'var(--warning)' : 'var(--text-2)' }}>{roomPhase === 'studying' ? '📖 Studying' : roomPhase === 'break' ? '☕ Break' : '⏸️ Waiting'}</div>
         </div>
+
+        {isHost && (
+          <div className="sr-invite-section">
+            <div className="sr-invite-header">
+              <h3>Invite Link</h3>
+              {!inviteLink ? (
+                <button className="btn btn-outline btn-sm" onClick={generateInvite}>Generate Invite Link</button>
+              ) : (
+                <button className="btn btn-primary btn-sm" onClick={copyInvite}>{inviteCopied ? 'Copied!' : 'Copy Link'}</button>
+              )}
+            </div>
+            {inviteLink && (
+              <div className="sr-invite-info">
+                <code className="sr-invite-link">{inviteLink}</code>
+                <span className="sr-invite-expiry">Expires in 10 minutes</span>
+              </div>
+            )}
+            {inviteError && <div className="ai-error" style={{ marginTop: 8 }}>{inviteError}</div>}
+            <p className="dash-empty" style={{ fontSize: 12, marginTop: 6 }}>Share this link with friends. They can join even if the room is private. The link expires after 10 minutes.</p>
+          </div>
+        )}
+
+        {joinError && <div className="ai-error">{joinError}</div>}
 
         {roomPhase !== 'idle' && (
           <div className="sr-timer-section">
@@ -144,6 +213,8 @@ export default function StudyRooms() {
   return (
     <div className="sr-page">
       <div className="page-toolbar"><div><h2>Study Rooms</h2><p className="page-desc">Join virtual study rooms and study together</p></div><button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>{showCreate ? 'Cancel' : '+ Create Room'}</button></div>
+
+      {joinError && <div className="ai-error" style={{ marginBottom: 16 }}>{joinError}</div>}
 
       {showCreate && (
         <div className="form-card">
