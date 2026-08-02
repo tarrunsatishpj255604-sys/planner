@@ -46,5 +46,5 @@
 .sr-delete-dialog h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
 .sr-delete-dialog p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
 .sr-delete-actions { display: flex; gap: 10px; justify-content: center; }
-.sr-card-delete { position: absolute; top: 12px; right: 12px; padding: 4px 10px; font-size: 12px; }
+.sr-card-delete { position: absolute; top: 44px; right: 12px; padding: 4px 10px; font-size: 12px; }
 @media (max-width: 768px) { .sr-room-body { grid-template-columns: 1fr; } }

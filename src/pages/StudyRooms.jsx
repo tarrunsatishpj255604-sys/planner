@@ -82,7 +82,7 @@ export default function StudyRooms() {
   }
 
   const joinRoom = async (room) => {
-    const existing = members.find(m => m.user_id === user.id)
+    const { data: existing } = await supabase.from('room_members').select('id, role').eq('room_id', room.id).eq('user_id', user.id).maybeSingle()
     if (!existing) await supabase.from('room_members').insert({ room_id: room.id, user_id: user.id, role: 'member' })
     setActiveRoom(room); setRoomPhase(room.current_phase || 'idle'); setTimeLeft(room.timer_duration * 60); setReady(false)
     setInviteLink(''); setInviteCopied(false); setInviteError('')
@@ -135,10 +135,11 @@ export default function StudyRooms() {
 
   const generateInvite = async () => {
     setInviteError(''); setInviteCopied(false)
+    if (!activeRoom) { setInviteError('No active room.'); return }
     const token = generateToken()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
     const { error } = await supabase.from('room_invites').insert({ room_id: activeRoom.id, created_by: user.id, token, expires_at: expiresAt })
-    if (error) { setInviteError('Could not create invite link.'); return }
+    if (error) { console.error('Invite insert failed:', error); setInviteError(`Could not create invite link: ${error.message}`); return }
     const link = `${window.location.origin}/?invite=${token}`
     setInviteLink(link)
     setInviteExpiresIn(10 * 60)
@@ -159,7 +160,7 @@ export default function StudyRooms() {
   const memberCount = members.length
   const readyCount = members.filter(m => m.is_ready).length
   const progress = activeRoom && roomPhase !== 'idle' ? ((activeRoom.timer_duration * 60 - timeLeft) / (activeRoom.timer_duration * 60)) * 100 : 0
-  const isHost = members.some(m => m.user_id === user.id && m.role === 'host')
+  const isHost = activeRoom?.user_id === user?.id || members.some(m => m.user_id === user.id && m.role === 'host')
 
   if (activeRoom) {
     return (
@@ -182,7 +183,7 @@ export default function StudyRooms() {
                 ) : (
                   <button className="btn btn-outline btn-sm" onClick={generateInvite}>Generate New Link</button>
                 )}
-                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--error)' }} onClick={() => setShowDeleteConfirm(true)}>Delete Room</button>
+                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--error)' }} onClick={() => setShowDeleteConfirm({ id: activeRoom.id })}>Delete Room</button>
               </div>
             </div>
             {inviteLink && inviteExpiresIn > 0 && (
@@ -199,19 +200,6 @@ export default function StudyRooms() {
             )}
             {inviteError && <div className="ai-error" style={{ marginTop: 8 }}>{inviteError}</div>}
             <p className="dash-empty" style={{ fontSize: 12, marginTop: 6 }}>Share this link with friends. They can join even if the room is private. The link expires after 10 minutes.</p>
-          </div>
-        )}
-
-        {showDeleteConfirm && (
-          <div className="sr-delete-overlay" onClick={() => setShowDeleteConfirm(false)}>
-            <div className="sr-delete-dialog" onClick={e => e.stopPropagation()}>
-              <h3>Delete this room?</h3>
-              <p>This will permanently remove the room and kick all members. This cannot be undone.</p>
-              <div className="sr-delete-actions">
-                <button className="btn btn-ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-                <button className="btn btn-primary" style={{ background: 'var(--error)' }} onClick={() => deleteRoom(activeRoom.id)}>Delete Room</button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -296,10 +284,23 @@ export default function StudyRooms() {
                 {room.subject && <span>📚 {room.subject}</span>}
               </div>
               {room.user_id === user?.id && (
-                <button className="btn btn-ghost btn-sm sr-card-delete" style={{ color: 'var(--error)' }} onClick={(e) => { e.stopPropagation(); deleteRoom(room.id) }}>Delete</button>
+                <button className="btn btn-ghost btn-sm sr-card-delete" style={{ color: 'var(--error)' }} onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm({ id: room.id }) }}>Delete</button>
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {showDeleteConfirm && showDeleteConfirm.id && (
+        <div className="sr-delete-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="sr-delete-dialog" onClick={e => e.stopPropagation()}>
+            <h3>Delete this room?</h3>
+            <p>This will permanently remove the room and kick all members. This cannot be undone.</p>
+            <div className="sr-delete-actions">
+              <button className="btn btn-ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className="btn btn-primary" style={{ background: 'var(--error)' }} onClick={() => deleteRoom(showDeleteConfirm.id)}>Delete Room</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
