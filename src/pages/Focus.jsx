@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { todayStr, XP_REWARDS, formatDate } from '../lib/helpers.js'
 import './FocusPage.css'
 
-const PRESETS = [15, 25, 45, 60]
+const PRESETS = [10, 15, 25, 45, 60, 90]
 const SOUNDS = [
   { key: 'rain', label: '🌧️ Rain' },
   { key: 'white', label: '📻 White Noise' },
@@ -26,6 +26,8 @@ export default function Focus() {
   const [volume, setVolume] = useState(0.5)
   const [fullscreen, setFullscreen] = useState(false)
   const [logging, setLogging] = useState(false)
+  const [customMin, setCustomMin] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
 
   const audioCtxRef = useRef(null)
   const soundNodesRef = useRef({})
@@ -222,9 +224,18 @@ export default function Focus() {
 
   const setPreset = (mins) => {
     if (running) return
-    setDuration(mins * 60)
-    setRemaining(mins * 60)
+    const clamped = Math.min(Math.max(mins, 1), 180)
+    setDuration(clamped * 60)
+    setRemaining(clamped * 60)
     elapsedRef.current = 0
+  }
+
+  const applyCustom = () => {
+    const mins = parseInt(customMin)
+    if (!mins || mins < 1 || mins > 180) return
+    setPreset(mins)
+    setShowCustom(false)
+    setCustomMin('')
   }
 
   const start = () => {
@@ -348,6 +359,24 @@ export default function Focus() {
               {PRESETS.map(p => (
                 <button key={p} className={`preset-btn ${duration === p * 60 ? 'active' : ''}`} onClick={() => setPreset(p)} disabled={running}>{p}m</button>
               ))}
+              <button className={`preset-btn ${showCustom ? 'active' : ''}`} onClick={() => setShowCustom(!showCustom)} disabled={running}>Custom</button>
+            </div>
+          )}
+
+          {showCustom && (mode === 'pomodoro' || mode === 'countdown') && (
+            <div className="focus-custom-row">
+              <input
+                type="number"
+                min="1"
+                max="180"
+                value={customMin}
+                onChange={e => setCustomMin(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && applyCustom()}
+                placeholder="Minutes (1–180)"
+                disabled={running}
+                className="focus-custom-input"
+              />
+              <button className="btn btn-primary btn-sm" onClick={applyCustom} disabled={running || !customMin || customMin < 1}>Set</button>
             </div>
           )}
 
