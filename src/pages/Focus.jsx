@@ -264,11 +264,15 @@ export default function Focus() {
   const finish = useCallback(async () => {
     setRunning(false)
     if (intervalRef.current) clearInterval(intervalRef.current)
+    const elapsed = startTimeRef.current > 0
+      ? elapsedRef.current + (Date.now() - startTimeRef.current) / 1000
+      : elapsedRef.current
+    if (elapsed < 1) return
     playBell()
-    const elapsed = elapsedRef.current + (Date.now() - startTimeRef.current) / 1000
-    const minutes = Math.max(Math.round(elapsed / 60), 1)
+    const minutes = Math.min(Math.max(Math.round(elapsed / 60), 1), 1440)
     await logSession(minutes)
     elapsedRef.current = 0
+    startTimeRef.current = 0
     setRemaining(mode === 'stopwatch' ? 0 : duration)
   }, [duration, mode])
 
