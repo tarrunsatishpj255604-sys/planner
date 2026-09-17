@@ -164,6 +164,7 @@ export default function StudyRooms() {
 
   if (activeRoom) {
     return (
+      <>
       <div className="sr-room-page">
         <div className="sr-room-header">
           <button className="btn btn-ghost btn-sm" onClick={leaveRoom}>← Leave Room</button>
@@ -241,6 +242,20 @@ export default function StudyRooms() {
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && showDeleteConfirm.id && (
+        <div className="sr-delete-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="sr-delete-dialog" onClick={e => e.stopPropagation()}>
+            <h3>Delete this room?</h3>
+            <p>This will permanently remove the room and kick all members. This cannot be undone.</p>
+            <div className="sr-delete-actions">
+              <button className="btn btn-ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className="btn btn-primary" style={{ background: 'var(--error)' }} onClick={() => deleteRoom(showDeleteConfirm.id)}>Delete Room</button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
