@@ -108,8 +108,8 @@ export default function Settings() {
           </div>
         </div>
         <div className="form-field">
-          <label>Daily Goal: {profile?.daily_goal || 120} minutes</label>
-          <input type="range" min="30" max="480" step="15" value={profile?.daily_goal || 120} onChange={e => updateProfile({ daily_goal: parseInt(e.target.value) })} />
+          <label>Daily Goal: {profile?.daily_goal_minutes || 120} minutes</label>
+          <input type="range" min="30" max="480" step="15" value={profile?.daily_goal_minutes || 120} onChange={e => updateProfile({ daily_goal_minutes: parseInt(e.target.value) })} />
         </div>
       </div>
 

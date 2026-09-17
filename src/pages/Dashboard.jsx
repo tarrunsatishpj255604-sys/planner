@@ -27,7 +27,7 @@ export default function Dashboard({ onNavigate }) {
   const { level, currentLevelXp, nextLevelXp, progress } = levelFromXp(profile?.xp || 0)
   const todayTasks = tasks.filter(t => t.due_date === todayStr() || (!t.due_date && !t.completed))
   const completedToday = todayTasks.filter(t => t.completed).length
-  const dailyGoal = profile?.daily_goal || 120
+  const dailyGoal = profile?.daily_goal_minutes || 120
   const todayMinutes = sessions.filter(s => s.session_date === todayStr()).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
   const goalPct = Math.min(todayMinutes / dailyGoal, 1)
 
